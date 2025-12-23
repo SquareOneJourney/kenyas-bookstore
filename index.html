@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/Kenya Favicon.PNG" />
+    <link rel="apple-touch-icon" href="/Kenya Favicon.PNG" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kenya's Bookstore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              forest: '#244B3C',
+              cream: '#FAF5E1',
+              'deep-blue': '#102840',
+              accent: '#E6CBA8',
+              muted: 'hsl(240 4.8% 95.9%)',
+              'muted-foreground': 'hsl(240 3.8% 46.1%)',
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              serif: ['Playfair Display', 'serif'],
+            },
+          },
+        },
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.5",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^0.15.0",
+    "chess.js": "https://aistudiocdn.com/chess.js@^1.0.0",
+    "react-chessboard": "https://aistudiocdn.com/react-chessboard@^4.4.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-cream text-deep-blue">
+    <a href="#main-content" class="skip-to-content">Skip to main content</a>
+    <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
+  </body>
+</html>
