@@ -18,7 +18,8 @@
     "react-chessboard": "^4.4.0",
     "@supabase/supabase-js": "^2.39.0",
     "@stripe/stripe-js": "^2.4.0",
-    "stripe": "^14.21.0"
+    "stripe": "^14.21.0",
+    "html5-qrcode": "^2.3.8"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
