@@ -217,13 +217,13 @@ const AdminMarketingPage: React.FC = () => {
 
   return (
     <div>
-        <h1 className="font-serif text-4xl font-bold text-deep-blue mb-2">Marketing & Bundles</h1>
-        <p className="text-gray-600 mb-8">AI-powered featured books and curated bundles.</p>
+        <h1 className="font-serif text-2xl md:text-4xl font-bold text-deep-blue mb-2">Marketing & Bundles</h1>
+        <p className="text-sm md:text-base text-gray-600 mb-6 md:mb-8">AI-powered featured books and curated bundles.</p>
 
         {/* AI Generate Featured Books Section */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-2xl font-bold mb-4">AI Generate Featured Books</h2>
-          <p className="text-gray-600 mb-6">
+        <div className="bg-white rounded-lg shadow-md p-4 md:p-6 mb-6 md:mb-8">
+          <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">AI Generate Featured Books</h2>
+          <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6">
             Let AI analyze your inventory and recommend 5 books to feature on the homepage. 
             These recommendations will automatically update the homepage when published.
           </p>
@@ -251,18 +251,18 @@ const AdminMarketingPage: React.FC = () => {
 
           {featuredRecommendations && (
             <div className="mt-6 space-y-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold">AI Recommendations</h3>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                <h3 className="text-lg md:text-xl font-bold">AI Recommendations</h3>
                 <Button
                   onClick={handlePublishFeaturedBooks}
                   disabled={isPublishingFeatured}
-                  className="bg-green-600 text-white hover:bg-green-700"
+                  className="bg-green-600 text-white hover:bg-green-700 text-sm md:text-base"
                 >
                   {isPublishingFeatured ? 'Publishing...' : 'Publish to Homepage'}
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {featuredRecommendations
                   .sort((a, b) => a.display_order - b.display_order)
                   .map((rec) => (
@@ -303,11 +303,11 @@ const AdminMarketingPage: React.FC = () => {
           <h2 className="text-2xl font-bold mb-4">Bundle Creator</h2>
           <p className="text-gray-600 mb-6">Move slow inventory by creating curated, AI-named bundles.</p>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
             {/* INVENTORY SELECTOR */}
-            <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-bold mb-4">Select Inventory</h2>
-                <div className="overflow-y-auto max-h-[500px] space-y-2">
+            <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-4 md:p-6">
+                <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4">Select Inventory</h2>
+                <div className="overflow-y-auto max-h-[400px] md:max-h-[500px] space-y-2">
                     {books.map(book => (
                         <div key={book.id} 
                              onClick={() => toggleBookSelection(book.id)}
@@ -333,8 +333,8 @@ const AdminMarketingPage: React.FC = () => {
             </div>
 
             {/* GENERATOR PANEL */}
-            <div className="bg-deep-blue text-cream rounded-lg shadow-xl p-6 h-fit sticky top-6">
-                <h2 className="text-xl font-bold mb-4">Bundle Creator</h2>
+            <div className="bg-deep-blue text-cream rounded-lg shadow-xl p-4 md:p-6 h-fit lg:sticky lg:top-6">
+                <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4">Bundle Creator</h2>
                 <div className="space-y-4">
                     <p className="text-sm text-cream/80">Selected Items: {selectedBooks.length}</p>
                     <Button 

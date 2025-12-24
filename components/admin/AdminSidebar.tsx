@@ -40,8 +40,12 @@ const HeartIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
+interface AdminSidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
-const AdminSidebar: React.FC = () => {
+const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
     const baseLinkClasses = "flex items-center space-x-3 px-4 py-3 rounded-md transition-colors duration-200";
     const inactiveLinkClasses = "text-cream/70 hover:bg-forest hover:text-cream";
     const activeLinkClasses = "bg-accent text-deep-blue font-semibold";
@@ -49,43 +53,69 @@ const AdminSidebar: React.FC = () => {
     const getNavLinkClass = ({ isActive }: { isActive: boolean }) => 
         `${baseLinkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`;
 
+    const handleLinkClick = () => {
+      // Close sidebar on mobile when a link is clicked
+      if (window.innerWidth < 768) {
+        onClose();
+      }
+    };
+
     return (
-        <div className="w-64 bg-deep-blue text-cream flex flex-col h-full fixed top-0 left-0 shadow-lg">
-            <div className="p-4 border-b border-cream/20">
-                <Link to="/admin" className="text-2xl font-serif font-bold text-center block">Admin Panel</Link>
+        <>
+            <div className={`
+                fixed top-0 left-0 h-full w-64 bg-deep-blue text-cream flex flex-col shadow-lg z-50
+                transform transition-transform duration-300 ease-in-out
+                md:translate-x-0
+                ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+            `}>
+                <div className="p-4 border-b border-cream/20 flex items-center justify-between">
+                    <Link to="/admin" className="text-2xl font-serif font-bold text-center flex-1" onClick={handleLinkClick}>
+                        Admin Panel
+                    </Link>
+                    {/* Close button for mobile */}
+                    <button
+                        onClick={onClose}
+                        className="md:hidden text-cream/70 hover:text-cream p-1"
+                        aria-label="Close menu"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <nav className="flex-grow p-4 space-y-1 overflow-y-auto">
+                    <NavLink to="/admin/dashboard" className={getNavLinkClass} onClick={handleLinkClick}>
+                        <DashboardIcon className="w-5 h-5" />
+                        <span>Dashboard</span>
+                    </NavLink>
+                    <NavLink to="/admin/library" className={getNavLinkClass} onClick={handleLinkClick}>
+                        <LibraryIcon className="w-5 h-5" />
+                        <span>Inventory</span>
+                    </NavLink>
+                    <NavLink to="/admin/orders" className={getNavLinkClass} onClick={handleLinkClick}>
+                        <OrdersIcon className="w-5 h-5" />
+                        <span>Orders & Supply</span>
+                    </NavLink>
+                    <NavLink to="/admin/marketing" className={getNavLinkClass} onClick={handleLinkClick}>
+                        <MarketingIcon className="w-5 h-5" />
+                        <span>Marketing</span>
+                    </NavLink>
+                    <NavLink to="/admin/analysis" className={getNavLinkClass} onClick={handleLinkClick}>
+                        <AnalysisIcon className="w-5 h-5" />
+                        <span>Pricing AI</span>
+                    </NavLink>
+                    <NavLink to="/admin/wishes" className={getNavLinkClass} onClick={handleLinkClick}>
+                        <HeartIcon className="w-5 h-5" />
+                        <span>Manage Wishes</span>
+                    </NavLink>
+                </nav>
+                <div className="p-4 border-t border-cream/20">
+                    <Link to="/" className="text-sm text-center block text-cream/70 hover:text-accent" onClick={handleLinkClick}>
+                        &larr; Back to Store
+                    </Link>
+                </div>
             </div>
-            <nav className="flex-grow p-4 space-y-1">
-                <NavLink to="/admin/dashboard" className={getNavLinkClass}>
-                    <DashboardIcon className="w-5 h-5" />
-                    <span>Dashboard</span>
-                </NavLink>
-                <NavLink to="/admin/library" className={getNavLinkClass}>
-                    <LibraryIcon className="w-5 h-5" />
-                    <span>Inventory</span>
-                </NavLink>
-                <NavLink to="/admin/orders" className={getNavLinkClass}>
-                    <OrdersIcon className="w-5 h-5" />
-                    <span>Orders & Supply</span>
-                </NavLink>
-                <NavLink to="/admin/marketing" className={getNavLinkClass}>
-                    <MarketingIcon className="w-5 h-5" />
-                    <span>Marketing</span>
-                </NavLink>
-                <NavLink to="/admin/analysis" className={getNavLinkClass}>
-                    <AnalysisIcon className="w-5 h-5" />
-                    <span>Pricing AI</span>
-                </NavLink>
-                <NavLink to="/admin/wishes" className={getNavLinkClass}>
-                    <HeartIcon className="w-5 h-5" />
-                    <span>Manage Wishes</span>
-                </NavLink>
-            </nav>
-            <div className="p-4 border-t border-cream/20">
-                <Link to="/" className="text-sm text-center block text-cream/70 hover:text-accent">
-                    &larr; Back to Store
-                </Link>
-            </div>
-        </div>
+        </>
     );
 };
 

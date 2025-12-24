@@ -153,7 +153,7 @@ const AdminAnalysisPage: React.FC = () => {
 
   return (
     <div>
-      <h1 className="font-serif text-4xl font-bold text-deep-blue mb-8">AI-Powered Book Analysis</h1>
+      <h1 className="font-serif text-2xl md:text-4xl font-bold text-deep-blue mb-6 md:mb-8">AI-Powered Book Analysis</h1>
       
       {/* Mode Toggle */}
       <div className="flex justify-center mb-6">
@@ -163,7 +163,7 @@ const AdminAnalysisPage: React.FC = () => {
         </div>
       </div>
       
-      <div className="bg-white p-6 rounded-lg shadow-md">
+      <div className="bg-white p-4 md:p-6 rounded-lg shadow-md">
         {mode === 'library' && (
           <div className="flex flex-col md:flex-row gap-4 items-end mb-6">
             <div className="w-full md:w-2/3">
