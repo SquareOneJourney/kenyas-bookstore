@@ -169,17 +169,17 @@ const HomePage: React.FC = () => {
         style={{
           width: '100vw',
           marginLeft: 'calc(-50vw + 50%)',
-          backgroundImage: "url('/Bookstore 2.png')",
+          backgroundImage: "url('/Bookstore 4.png')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
         }}
       >
-        {/* Faded background image overlay - 60% transparency */}
-        <div className="absolute inset-0 bg-white/60 pointer-events-none"></div>
+        {/* Faded background image overlay - 30% transparency */}
+        <div className="absolute inset-0 bg-white/70 pointer-events-none"></div>
         
         {/* Additional overlay for better readability */}
-        <div className="absolute inset-0 bg-deep-blue/20 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-deep-blue/10 pointer-events-none"></div>
         
         {/* Content Container */}
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12">

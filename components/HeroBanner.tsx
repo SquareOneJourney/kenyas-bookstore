@@ -8,14 +8,14 @@ const HeroBanner: React.FC = () => {
     <div 
       className="text-cream p-8 md:p-16 rounded-lg text-center my-8 shadow-xl relative overflow-hidden"
       style={{
-        backgroundImage: "url('/Bookstore 2.png')",
+        backgroundImage: "url('/Bookstore 4.png')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }}
     >
       {/* Overlay for better text readability */}
-      <div className="absolute inset-0 bg-deep-blue/70 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-deep-blue/50 pointer-events-none"></div>
       
       {/* Content */}
       <div className="relative z-10">
