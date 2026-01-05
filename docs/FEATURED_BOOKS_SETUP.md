@@ -191,3 +191,5 @@ The AI prompt focuses on:
 - [ ] Multiple featured sets (holiday picks, seasonal themes)
 - [ ] Analytics (track which featured books convert best)
 
+
+

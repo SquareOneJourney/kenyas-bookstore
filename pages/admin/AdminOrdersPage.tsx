@@ -38,52 +38,50 @@ const AdminOrdersPage: React.FC = () => {
 
   return (
     <div>
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6 md:mb-8">
-        <h1 className="font-serif text-2xl md:text-4xl font-bold text-deep-blue">Order Fulfillment</h1>
-        <div className="flex gap-2 md:gap-4">
-            <div className="flex items-center gap-2 text-xs md:text-sm bg-white px-2 md:px-3 py-1 rounded border">
-                <span className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-blue-500"></span>
-                <span className="hidden sm:inline">Ingram Drop-ship</span>
-                <span className="sm:hidden">Ingram</span>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="font-serif text-4xl font-bold text-deep-blue">Order Fulfillment</h1>
+        <div className="flex gap-4">
+            <div className="flex items-center gap-2 text-sm bg-white px-3 py-1 rounded border">
+                <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+                Ingram Drop-ship
             </div>
-            <div className="flex items-center gap-2 text-xs md:text-sm bg-white px-2 md:px-3 py-1 rounded border">
-                <span className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-green-500"></span>
-                <span className="hidden sm:inline">Local Stock</span>
-                <span className="sm:hidden">Local</span>
+            <div className="flex items-center gap-2 text-sm bg-white px-3 py-1 rounded border">
+                <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                Local Stock
             </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md overflow-x-auto">
-        <table className="w-full text-left min-w-[800px]">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <table className="w-full text-left">
           <thead className="bg-gray-50 border-b">
             <tr>
-              <th className="p-2 md:p-4 text-xs font-semibold uppercase text-gray-500">Source</th>
-              <th className="p-2 md:p-4 text-xs font-semibold uppercase text-gray-500">Order ID</th>
-              <th className="p-2 md:p-4 text-xs font-semibold uppercase text-gray-500">Customer</th>
-              <th className="p-2 md:p-4 text-xs font-semibold uppercase text-gray-500">Status</th>
-              <th className="p-2 md:p-4 text-xs font-semibold uppercase text-gray-500">Total</th>
-              <th className="p-2 md:p-4 text-xs font-semibold uppercase text-gray-500">Actions</th>
+              <th className="p-4 text-xs font-semibold uppercase text-gray-500">Source</th>
+              <th className="p-4 text-xs font-semibold uppercase text-gray-500">Order ID</th>
+              <th className="p-4 text-xs font-semibold uppercase text-gray-500">Customer</th>
+              <th className="p-4 text-xs font-semibold uppercase text-gray-500">Status</th>
+              <th className="p-4 text-xs font-semibold uppercase text-gray-500">Total</th>
+              <th className="p-4 text-xs font-semibold uppercase text-gray-500">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {orders.map((order) => (
               <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                <td className="p-2 md:p-4">
-                    <span className={`inline-flex items-center justify-center w-6 h-6 md:w-8 md:h-8 rounded-full text-white font-bold text-xs ${order.fulfillmentSource === 'ingram' ? 'bg-blue-500' : 'bg-green-500'}`}>
+                <td className="p-4">
+                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-white font-bold text-xs ${order.fulfillmentSource === 'ingram' ? 'bg-blue-500' : 'bg-green-500'}`}>
                         {order.fulfillmentSource === 'ingram' ? 'I' : 'L'}
                     </span>
                 </td>
-                <td className="p-2 md:p-4">
-                    <p className="font-bold text-xs md:text-sm text-deep-blue">{order.id}</p>
-                    <p className="text-[10px] md:text-xs text-gray-400">{order.date}</p>
+                <td className="p-4">
+                    <p className="font-bold text-deep-blue">{order.id}</p>
+                    <p className="text-xs text-gray-400">{order.date}</p>
                 </td>
-                <td className="p-2 md:p-4">
-                    <p className="text-xs md:text-sm">{order.customerEmail}</p>
-                    <p className="text-[10px] md:text-xs text-gray-500 truncate max-w-[150px] md:max-w-[200px]">{order.customerAddress}</p>
+                <td className="p-4">
+                    <p className="text-sm">{order.customerEmail}</p>
+                    <p className="text-xs text-gray-500 truncate max-w-[200px]">{order.customerAddress}</p>
                 </td>
-                <td className="p-2 md:p-4">
-                    <span className={`px-2 py-1 text-[10px] md:text-xs font-medium rounded-full ${
+                <td className="p-4">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                         order.status === 'Delivered' ? 'bg-green-100 text-green-800' : 
                         order.status === 'Pending Ingram' ? 'bg-blue-100 text-blue-800 animate-pulse' :
                         'bg-gray-100 text-gray-800'
@@ -92,20 +90,19 @@ const AdminOrdersPage: React.FC = () => {
                     </span>
                     {order.trackingNumber && <p className="text-[10px] mt-1 font-mono text-gray-500">PO: {order.trackingNumber}</p>}
                 </td>
-                <td className="p-2 md:p-4 font-bold text-xs md:text-sm">${order.total.toFixed(2)}</td>
-                <td className="p-2 md:p-4">
+                <td className="p-4 font-bold">${order.total.toFixed(2)}</td>
+                <td className="p-4">
                     {order.fulfillmentSource === 'ingram' && order.status === 'Pending Ingram' && (
                         <Button 
                             size="sm" 
                             onClick={() => handleSendToIngram(order.id)}
                             disabled={isProcessing === order.id}
-                            className="text-[10px] md:text-xs"
                         >
                             {isProcessing === order.id ? 'Sending...' : 'Send to Ingram'}
                         </Button>
                     )}
                     {order.fulfillmentSource === 'local' && order.status === 'Pending Ingram' && (
-                        <Button size="sm" variant="outline" className="text-[10px] md:text-xs">Print Packing Slip</Button>
+                        <Button size="sm" variant="outline">Print Packing Slip</Button>
                     )}
                 </td>
               </tr>

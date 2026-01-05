@@ -69,3 +69,5 @@ COMMENT ON TABLE bundle_items IS 'Links individual books to bundles. Each bundle
 COMMENT ON COLUMN bundles.bundle_price_cents IS 'Total price for the bundle (after discount applied).';
 COMMENT ON COLUMN bundles.discount_percentage IS 'Discount percentage applied to sum of individual book prices.';
 
+
+

@@ -21,8 +21,8 @@ const AdminDashboardPage: React.FC = () => {
 
     return (
         <div>
-            <h1 className="font-serif text-2xl md:text-4xl font-bold text-deep-blue mb-6 md:mb-8">Dashboard</h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <h1 className="font-serif text-4xl font-bold text-deep-blue mb-8">Dashboard</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <StatCard 
                     title="Total Books" 
                     value={totalBooks} 

@@ -8,7 +8,7 @@ const HeroBanner: React.FC = () => {
     <div 
       className="text-cream p-8 md:p-16 rounded-lg text-center my-8 shadow-xl relative overflow-hidden"
       style={{
-        backgroundImage: "url('/Book Background 2.png')",
+        backgroundImage: "url('/Bookstore 2.png')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'

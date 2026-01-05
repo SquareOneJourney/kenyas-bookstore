@@ -134,3 +134,5 @@ export function getAvailabilityMessage(book: BookRow): string {
   return book.availability_message ?? 'Available for order';
 }
 
+
+

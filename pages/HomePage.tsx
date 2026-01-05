@@ -169,7 +169,7 @@ const HomePage: React.FC = () => {
         style={{
           width: '100vw',
           marginLeft: 'calc(-50vw + 50%)',
-          backgroundImage: "url('/Book Background 2.png')",
+          backgroundImage: "url('/Bookstore 2.png')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
