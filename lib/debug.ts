@@ -1,6 +1,6 @@
 
-import { getSupabaseClient } from '../../lib/supabaseClient';
-import { env } from '../../lib/env';
+import { getSupabaseClient } from './supabaseClient';
+import { env } from './env';
 import { GoogleGenAI } from '@google/genai';
 
 export const checkConnections = async () => {
