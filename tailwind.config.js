@@ -10,6 +10,13 @@ export default {
     theme: {
         extend: {
             colors: {
+                ink: '#0F172A',
+                ecru: '#F6F1E8',
+                oxblood: '#722F37',
+                brass: '#C08A3A',
+                bone: '#E8DFCF',
+                midnight: '#0C1A2C',
+                mist: 'hsl(220 15% 96%)',
                 forest: '#244B3C',
                 cream: '#FAF5E1',
                 'deep-blue': '#102840',
@@ -20,6 +27,14 @@ export default {
             fontFamily: {
                 sans: ['Inter', 'sans-serif'],
                 serif: ['Playfair Display', 'serif'],
+            },
+            boxShadow: {
+                elevate: '0 16px 40px -20px rgba(15, 23, 42, 0.35)',
+                'soft-plate': '0 30px 70px -40px rgba(0, 0, 0, 0.45)',
+            },
+            letterSpacing: {
+                wide: '0.06em',
+                wider: '0.12em',
             },
         },
     },

@@ -13,13 +13,13 @@ const Button: React.FC<ButtonProps> = ({
   size = 'md',
   ...props
 }) => {
-  const baseClasses = 'font-semibold rounded-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-cream';
+  const baseClasses = 'font-semibold rounded-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-ecru';
   
   const variantClasses = {
-    primary: 'bg-forest text-cream hover:bg-forest/90 focus:ring-forest',
-    secondary: 'bg-accent text-deep-blue hover:bg-accent/90 focus:ring-accent',
-    outline: 'border border-accent text-deep-blue hover:bg-accent/20 focus:ring-accent',
-    ghost: 'text-deep-blue hover:bg-accent/20',
+    primary: 'bg-oxblood text-ecru hover:bg-oxblood/90 focus:ring-oxblood shadow-elevate',
+    secondary: 'bg-brass text-midnight hover:bg-brass/90 focus:ring-brass shadow-md',
+    outline: 'border border-brass text-ink hover:bg-brass/10 focus:ring-brass',
+    ghost: 'text-ecru hover:bg-white/10 focus:ring-brass',
   };
 
   const sizeClasses = {

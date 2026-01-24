@@ -131,170 +131,251 @@ const AdminLibraryPage: React.FC = () => {
     };
 
     return (
-        <div>
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="font-serif text-4xl font-bold text-deep-blue">Inventory Management</h1>
-                <div className="space-x-4">
-                    <Button variant="outline" onClick={() => addBooks(MOCK_BOOKS)}>Seed Mock Data</Button>
-                    <Button variant={mode === 'view' ? 'primary' : 'outline'} onClick={() => setMode('view')}>View All</Button>
-                    <Button variant={mode === 'scan' ? 'primary' : 'outline'} onClick={() => {
-                        setMode('scan');
-                        setScanMethod('manual');
-                    }}>Quick Scan Mode</Button>
+        <div className="pb-24 pt-4 md:pt-0">
+            {/* Desktop Header */}
+            <div className="hidden md:flex justify-between items-center mb-10">
+                <div>
+                    <h1 className="font-serif text-5xl font-bold text-deep-blue tracking-tight">Inventory</h1>
+                    <p className="text-gray-500 mt-2 font-medium">Manage your bookstore's physical and digital catalog.</p>
+                </div>
+                <div className="flex gap-3">
+                    <Button variant="outline" size="sm" onClick={() => addBooks(MOCK_BOOKS)}>Seed Data</Button>
+                    <Button
+                        variant={mode === 'scan' ? 'primary' : 'outline'}
+                        onClick={() => {
+                            setMode(mode === 'scan' ? 'view' : 'scan');
+                            setScanMethod('manual');
+                        }}
+                    >
+                        {mode === 'scan' ? 'Close Scanner' : 'Quick Add / Scan'}
+                    </Button>
+                </div>
+            </div>
+
+            {/* Mobile Header (Minimal) */}
+            <div className="md:hidden mb-6 flex justify-between items-center px-2">
+                <h1 className="font-serif text-3xl font-bold text-deep-blue">Library</h1>
+                <div className="text-xs font-bold text-forest bg-forest/10 px-3 py-1 rounded-full uppercase tracking-widest">
+                    Admin
                 </div>
             </div>
 
             {mode === 'scan' && (
-                <div className="bg-white p-8 rounded-lg shadow-lg border-2 border-forest/20 animate-in slide-in-from-top-4">
-                    <div className="flex justify-center mb-6 gap-4">
-                        <button
-                            onClick={() => setScanMethod('manual')}
-                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${scanMethod === 'manual' ? 'bg-forest text-cream' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                        >
-                            Manual Entry
-                        </button>
-                        <button
-                            onClick={() => setScanMethod('camera')}
-                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${scanMethod === 'camera' ? 'bg-forest text-cream' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                        >
-                            Camera Scan
-                        </button>
-                    </div>
+                <div className="mb-10 max-w-4xl mx-auto">
+                    <div className="glass-panel p-6 md:p-10 rounded-[2rem] relative overflow-hidden">
+                        {/* Decorative Background Element */}
+                        <div className="absolute -top-20 -right-20 w-64 h-64 bg-forest/5 rounded-full blur-3xl -z-10"></div>
 
-                    <div className="text-center mb-8">
-                        <h2 className="text-2xl font-bold text-deep-blue">Scanner Ready</h2>
-                        <p className="text-gray-500">Scan ISBN to auto-populate from Google Books & Ingram.</p>
-                        {debugError && (
-                            <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded text-sm text-left font-mono break-all">
-                                <strong>Debug Info:</strong><br />
-                                {debugError}
-                            </div>
-                        )}
-                    </div>
-
-                    {scanMethod === 'camera' ? (
-                        <div className="mb-8 max-w-lg mx-auto">
-                            <BarcodeScanner
-                                onScanSuccess={handleCameraScan}
-                                onScanFailure={(err) => console.log(err)}
-                            />
+                        <div className="flex justify-center mb-8 bg-gray-100/50 p-1.5 rounded-full w-fit mx-auto ring-1 ring-black/5">
+                            <button
+                                onClick={() => setScanMethod('manual')}
+                                className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${scanMethod === 'manual' ? 'bg-forest text-cream shadow-lg shadow-forest/20' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                MANUAL ENTRY
+                            </button>
+                            <button
+                                onClick={() => setScanMethod('camera')}
+                                className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${scanMethod === 'camera' ? 'bg-forest text-cream shadow-lg shadow-forest/20' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                CAMERA SCAN
+                            </button>
                         </div>
-                    ) : (
-                        <form onSubmit={handleScan} className="max-w-xl mx-auto mb-8">
 
-                            <div className="relative">
-                                <input
-                                    ref={scanInputRef}
-                                    type="text"
-                                    className="w-full text-center text-2xl tracking-widest p-4 border-2 border-forest rounded-lg focus:ring-4 focus:ring-forest/30 focus:outline-none"
-                                    placeholder="SCAN ISBN"
-                                    value={scanIsbn}
-                                    onChange={(e) => setScanIsbn(e.target.value)}
-                                    disabled={isFetching}
-                                    autoFocus
+                        {scanMethod === 'camera' ? (
+                            <div className="mb-10 max-w-md mx-auto">
+                                <BarcodeScanner
+                                    onScanSuccess={handleCameraScan}
+                                    onScanFailure={(err) => console.log(err)}
                                 />
-                                {isFetching && (
-                                    <div className="absolute right-4 top-4">
-                                        <div className="animate-spin h-6 w-6 border-2 border-forest border-t-transparent rounded-full"></div>
-                                    </div>
-                                )}
                             </div>
-                        </form>
-                    )}
-
-                    {scannedBook && (
-                        <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 flex flex-col md:flex-row gap-8">
-                            <div className="w-32 flex-shrink-0">
-                                <img src={scannedBook.cover_url} alt="Cover" className="w-full h-auto rounded shadow-md" />
-                                {ingramStatus && (
-                                    <div className="mt-4 p-2 bg-blue-50 border border-blue-200 rounded text-[10px] text-blue-800">
-                                        <p className="font-bold uppercase mb-1">Ingram Insight</p>
-                                        <p>Stock: {ingramStatus.stockLevel}</p>
-                                        <p>Wholesale: ${ingramStatus.wholesalePrice.toFixed(2)}</p>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="col-span-2">
-                                    <h3 className="text-xl font-bold text-deep-blue">{scannedBook.title}</h3>
-                                    <p className="text-gray-600">by {scannedBook.author}</p>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <Select label="Supply Source" value={formSource} onChange={e => setFormSource(e.target.value as SupplySource)}>
-                                        <option value="local">Local Physical Stock</option>
-                                        <option value="ingram">Ingram Drop-ship</option>
-                                    </Select>
-                                    <Select label="Condition" value={formCondition} onChange={e => setFormCondition(e.target.value as BookCondition)}>
-                                        <option value="New">New</option>
-                                        <option value="Used - Like New">Like New</option>
-                                        <option value="Used - Good">Good</option>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <Input label="Price ($)" type="number" step="0.01" value={formPrice} onChange={e => setFormPrice(e.target.value)} />
-                                    {formSource === 'local' && (
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <Input label="Quantity" type="number" value={formStock} onChange={e => setFormStock(e.target.value)} />
-                                            <Input label="Bin Location" placeholder="A-1" value={formLocation} onChange={e => setFormLocation(e.target.value)} />
+                        ) : (
+                            <form onSubmit={handleScan} className="max-w-xl mx-auto mb-10">
+                                <div className="group relative">
+                                    <input
+                                        ref={scanInputRef}
+                                        type="text"
+                                        className="w-full text-center text-3xl font-bold tracking-[0.2em] p-6 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-forest/15 focus:border-forest outline-none transition-all placeholder:text-gray-300"
+                                        placeholder="0000000000000"
+                                        value={scanIsbn}
+                                        onChange={(e) => setScanIsbn(e.target.value)}
+                                        disabled={isFetching}
+                                        autoFocus
+                                    />
+                                    {isFetching && (
+                                        <div className="absolute right-6 top-1/2 -translate-y-1/2">
+                                            <div className="animate-spin h-6 w-6 border-2 border-forest border-t-transparent rounded-full"></div>
                                         </div>
                                     )}
                                 </div>
+                                <p className="text-center text-gray-400 text-xs mt-4 font-medium tracking-wide uppercase">Enter ISBN-13 or ISBN-10</p>
+                            </form>
+                        )}
 
-                                <div className="col-span-2 flex justify-end gap-4 mt-4">
-                                    <Button variant="outline" onClick={() => setScannedBook(null)}>Cancel</Button>
-                                    <Button onClick={handleSaveScannedBook} className="w-40">Save to Inventory</Button>
+                        {scannedBook && (
+                            <div className="bg-white p-6 md:p-8 rounded-3xl border border-black/5 shadow-2xl flex flex-col md:flex-row gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="w-40 mx-auto md:mx-0 flex-shrink-0">
+                                    <div className="relative group">
+                                        <img src={scannedBook.cover_url} alt="Cover" className="w-full aspect-[2/3] object-cover rounded-xl shadow-xl transition-transform group-hover:scale-105" />
+                                        <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-black/10"></div>
+                                    </div>
+                                    {ingramStatus && (
+                                        <div className="mt-6 p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl overflow-hidden">
+                                            <p className="font-bold text-[9px] text-indigo-900 uppercase tracking-widest mb-2 opacity-60">Ingram Insights</p>
+                                            <div className="flex justify-between items-center mb-1">
+                                                <span className="text-[10px] text-indigo-700">Stock</span>
+                                                <span className="text-[10px] font-bold text-indigo-900">{ingramStatus.stockLevel}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-[10px] text-indigo-700">Cost</span>
+                                                <span className="text-[10px] font-bold text-indigo-900">${ingramStatus.wholesalePrice.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-grow space-y-6">
+                                    <div>
+                                        <h3 className="text-2xl font-bold text-deep-blue leading-tight">{scannedBook.title}</h3>
+                                        <p className="text-gray-500 font-medium">by {scannedBook.author}</p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+                                        <div className="space-y-5">
+                                            <Select label="Supply Source" value={formSource} onChange={e => setFormSource(e.target.value as SupplySource)}>
+                                                <option value="local">Local Physical Stock</option>
+                                                <option value="ingram">Ingram Drop-ship</option>
+                                            </Select>
+                                            <Select label="Condition" value={formCondition} onChange={e => setFormCondition(e.target.value as BookCondition)}>
+                                                <option value="New">New</option>
+                                                <option value="Used - Like New">Like New</option>
+                                                <option value="Used - Good">Good</option>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-5">
+                                            <Input label="Sale Price ($)" type="number" step="0.01" value={formPrice} onChange={e => setFormPrice(e.target.value)} />
+                                            {formSource === 'local' && (
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <Input label="Quantity" type="number" value={formStock} onChange={e => setFormStock(e.target.value)} />
+                                                    <Input label="Bin" placeholder="A-1" value={formLocation} onChange={e => setFormLocation(e.target.value)} />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end gap-3 pt-6">
+                                        <button
+                                            onClick={() => setScannedBook(null)}
+                                            className="px-6 py-3 rounded-full text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors"
+                                        >
+                                            DISCARD
+                                        </button>
+                                        <Button onClick={handleSaveScannedBook} className="px-10 h-12 shadow-xl shadow-forest/20">
+                                            SAVE TO CATALOG
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             )}
 
-            <div className="bg-white rounded-lg shadow-md overflow-x-auto mt-8">
-                <table className="w-full text-left">
-                    <thead className="bg-gray-50 border-b">
-                        <tr>
-                            <th className="p-4 text-xs font-semibold text-gray-500 w-16">Cover</th>
-                            <th className="p-4 text-xs font-semibold text-gray-500">Source</th>
-                            <th className="p-4 text-xs font-semibold text-gray-500">Details</th>
-                            <th className="p-4 text-xs font-semibold text-gray-500">Location</th>
-                            <th className="p-4 text-xs font-semibold text-gray-500">Price</th>
-                            <th className="p-4 text-xs font-semibold text-gray-500">Stock</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                        {books.map((book) => (
-                            <tr key={book.id} className="hover:bg-gray-50">
-                                <td className="p-4">
-                                    <img src={book.cover_url || '/placeholder-book.png'} alt={book.title} className="w-10 h-14 object-cover rounded shadow-sm" />
-                                </td>
-                                <td className="p-4">
-                                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-tighter ${book.supply_source === 'ingram' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+            {/* Inventory Feed (Mobile Cards / Desktop Grid) */}
+            <div className="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 md:space-y-0">
+                {books.map((book) => (
+                    <div key={book.id} className="admin-card group">
+                        <div className="flex md:flex-col h-full">
+                            {/* Card Image */}
+                            <div className="w-24 md:w-full aspect-[2/3] md:aspect-[3/4] relative overflow-hidden flex-shrink-0 bg-gray-100">
+                                <img
+                                    src={book.cover_url || '/placeholder-book.png'}
+                                    alt={book.title}
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+
+                                {/* Quick Badges */}
+                                <div className="absolute top-2 left-2 flex flex-col gap-1">
+                                    <span className={`status-badge border ${book.supply_source === 'ingram' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
                                         {book.supply_source || 'local'}
                                     </span>
-                                </td>
-                                <td className="p-4">
-                                    <p className="font-medium text-deep-blue text-sm">{book.title}</p>
-                                    <p className="text-[10px] text-gray-400">{book.isbn13 || book.isbn10 || 'N/A'}</p>
-                                </td>
-                                <td className="p-4 font-mono text-xs text-gray-600">
-                                    {book.location || "N/A"}
-                                </td>
-                                <td className="p-4 text-sm font-semibold">{formatMoneyFromCents(book.list_price_cents ?? 0, book.currency || 'USD')}</td>
-                                <td className="p-4 font-medium">
-                                    {book.supply_source === 'ingram' ? (
-                                        <span className="text-blue-600 text-xs">Drop-ship (Active)</span>
-                                    ) : (
-                                        <span className={book.stock && book.stock < 5 ? 'text-red-600' : 'text-forest'}>{book.stock ?? 0}</span>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                                </div>
+                            </div>
+
+                            {/* Card Content */}
+                            <div className="flex-grow p-4 md:p-5 flex flex-col justify-between">
+                                <div className="space-y-1">
+                                    <h3 className="font-bold text-deep-blue text-sm md:text-base line-clamp-2 leading-snug group-hover:text-forest transition-colors">
+                                        {book.title}
+                                    </h3>
+                                    <p className="text-[10px] md:text-xs text-gray-500 font-medium line-clamp-1">by {book.author}</p>
+
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <span className="text-[10px] font-mono text-gray-400">{book.isbn13 || book.isbn10 || 'NO ISBN'}</span>
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Price</span>
+                                        <span className="text-sm md:text-base font-bold text-deep-blue">
+                                            {formatMoneyFromCents(book.list_price_cents ?? 0, book.currency || 'USD')}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Stock</span>
+                                        {book.supply_source === 'ingram' ? (
+                                            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">AUTO</span>
+                                        ) : (
+                                            <span className={`text-sm font-bold ${book.stock && book.stock < 5 ? 'text-rose-500' : 'text-forest'}`}>
+                                                {book.stock ?? 0}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
+
+            {/* Mobile Bottom Navigation */}
+            <nav className="bottom-nav">
+                <button
+                    onClick={() => setMode('view')}
+                    className={`nav-item ${mode === 'view' ? 'active' : ''}`}
+                >
+                    <svg className="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <span className="nav-label text-[10px]">LIBRARY</span>
+                </button>
+
+                <button
+                    onClick={() => {
+                        setMode('scan');
+                        setScanMethod('camera');
+                    }}
+                    className={`nav-item ${mode === 'scan' ? 'active' : ''}`}
+                >
+                    <div className={`p-3 -mt-10 rounded-full shadow-lg transition-transform ${mode === 'scan' ? 'bg-forest text-cream scale-110' : 'bg-white text-gray-400 hover:scale-105'}`}>
+                        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                        </svg>
+                    </div>
+                    <span className="nav-label mt-1">SCAN</span>
+                </button>
+
+                <button
+                    onClick={() => setMode('view')} // Placeholder for analytics
+                    className="nav-item opacity-50"
+                >
+                    <svg className="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span className="nav-label">INSIGHTS</span>
+                </button>
+            </nav>
         </div>
     );
 };

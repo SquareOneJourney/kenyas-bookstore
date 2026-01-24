@@ -59,37 +59,31 @@ const BookCarousel: React.FC<BookCarouselProps> = ({
   };
 
   // Show section even if empty (for placeholder state)
-  const titleColor = variant === 'light' ? 'text-cream' : 'text-deep-blue';
-  const linkColor = variant === 'light' ? 'text-cream hover:text-cream/80' : 'text-forest hover:text-forest/80';
-  const placeholderBg = variant === 'light' ? 'bg-white/10 border-white/20' : 'bg-gray-50 border-gray-300';
-  const placeholderText = variant === 'light' ? 'text-cream/80' : 'text-gray-500';
+  const titleColor = variant === 'light' ? 'text-ecru' : 'text-ink';
+  const linkColor = variant === 'light' ? 'text-ecru hover:text-ecru/80' : 'text-oxblood hover:text-oxblood/80';
+  const placeholderBg = variant === 'light' ? 'bg-white/10 border-white/20' : 'bg-bone border-bone/60';
+  const placeholderText = variant === 'light' ? 'text-cream/80' : 'text-ink/60';
 
   return (
     <section className="mb-12 md:mb-16">
-      <div className="flex items-center justify-between mb-6">
-        <h2 
-          className={`font-serif text-3xl md:text-4xl font-bold ${titleColor}`}
-          style={variant !== 'light' ? {
-            textShadow: '0 2px 4px rgba(0,0,0,0.3), 0 0 8px rgba(0,0,0,0.2)'
-          } : undefined}
-        >
-          {title}
-        </h2>
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <p className="section-heading">{title}</p>
+          <h2 className={`font-serif text-3xl md:text-4xl font-semibold ${titleColor}`}>{title}</h2>
+        </div>
         {showViewAll && (
           <Link
             to={viewAllLink}
-            className={`ml-4 ${linkColor} font-semibold transition-colors text-sm md:text-base`}
-            style={variant !== 'light' ? {
-              textShadow: '0 1px 3px rgba(0,0,0,0.3), 0 0 6px rgba(0,0,0,0.2)'
-            } : undefined}
+            className={`ml-4 ${linkColor} font-semibold transition-colors text-sm md:text-base flex items-center gap-2`}
           >
             See All
+            <span aria-hidden>→</span>
           </Link>
         )}
       </div>
       
       {books.length === 0 ? (
-        <div className={`text-center py-12 rounded-lg border border-dashed ${placeholderBg}`}>
+        <div className={`text-center py-12 rounded-2xl border border-dashed ${placeholderBg}`}>
           <p className={placeholderText}>Coming soon - {title.toLowerCase()} will appear here</p>
         </div>
       ) : (
@@ -98,7 +92,7 @@ const BookCarousel: React.FC<BookCarouselProps> = ({
           {canScrollLeft && (
             <button
               onClick={() => scroll('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 transition-all"
+              className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-ecru/80 hover:bg-ecru shadow-md rounded-full p-2 transition-all brass-border"
               aria-label="Scroll left"
             >
               <ChevronLeftIcon />
@@ -109,10 +103,10 @@ const BookCarousel: React.FC<BookCarouselProps> = ({
           <div
             ref={scrollContainerRef}
             onScroll={checkScrollButtons}
-            className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth"
+            className="flex gap-8 overflow-x-auto scrollbar-hide pb-4 scroll-smooth px-1"
           >
             {books.map((book) => (
-              <div key={book.id} className="flex-shrink-0 w-48">
+              <div key={book.id} className="flex-shrink-0 w-52">
                 <BookCard book={book} />
               </div>
             ))}
@@ -122,7 +116,7 @@ const BookCarousel: React.FC<BookCarouselProps> = ({
           {canScrollRight && (
             <button
               onClick={() => scroll('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 transition-all"
+              className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 bg-ecru/80 hover:bg-ecru shadow-md rounded-full p-2 transition-all brass-border"
               aria-label="Scroll right"
             >
               <ChevronRightIcon />
