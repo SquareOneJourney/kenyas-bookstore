@@ -9,6 +9,7 @@ import { BookService } from '../../services/bookService';
 import { IngramService } from '../../services/ingramService';
 
 import BarcodeScanner from '../../components/admin/BarcodeScanner';
+import { BOOKS as MOCK_BOOKS } from '../../lib/mockData';
 
 // Define the runtime shape of Book objects (which differs from the strict DB type)
 interface AppBook {
@@ -141,37 +142,66 @@ const AdminLibraryPage: React.FC = () => {
             <div className="flex justify-between items-center mb-8">
                 <h1 className="font-serif text-4xl font-bold text-deep-blue">Inventory Management</h1>
                 <div className="space-x-4">
+                    <Button variant="outline" onClick={() => addBooks(MOCK_BOOKS as any[])}>Seed Mock Data</Button>
                     <Button variant={mode === 'view' ? 'primary' : 'outline'} onClick={() => setMode('view')}>View All</Button>
-                    <Button variant={mode === 'scan' ? 'primary' : 'outline'} onClick={() => setMode('scan')}>Quick Scan Mode</Button>
+                    <Button variant={mode === 'scan' ? 'primary' : 'outline'} onClick={() => {
+                        setMode('scan');
+                        setScanMethod('manual');
+                    }}>Quick Scan Mode</Button>
                 </div>
             </div>
 
             {mode === 'scan' && (
                 <div className="bg-white p-8 rounded-lg shadow-lg border-2 border-forest/20 animate-in slide-in-from-top-4">
+                    <div className="flex justify-center mb-6 gap-4">
+                        <button
+                            onClick={() => setScanMethod('manual')}
+                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${scanMethod === 'manual' ? 'bg-forest text-cream' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                        >
+                            Manual Entry
+                        </button>
+                        <button
+                            onClick={() => setScanMethod('camera')}
+                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${scanMethod === 'camera' ? 'bg-forest text-cream' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                        >
+                            Camera Scan
+                        </button>
+                    </div>
+
                     <div className="text-center mb-8">
                         <h2 className="text-2xl font-bold text-deep-blue">Scanner Ready</h2>
                         <p className="text-gray-500">Scan ISBN to auto-populate from Google Books & Ingram.</p>
                     </div>
 
-                    <form onSubmit={handleScan} className="max-w-xl mx-auto mb-8">
-                        <div className="relative">
-                            <input
-                                ref={scanInputRef}
-                                type="text"
-                                className="w-full text-center text-2xl tracking-widest p-4 border-2 border-forest rounded-lg focus:ring-4 focus:ring-forest/30 focus:outline-none"
-                                placeholder="SCAN ISBN"
-                                value={scanIsbn}
-                                onChange={(e) => setScanIsbn(e.target.value)}
-                                disabled={isFetching}
-                                autoFocus
+                    {scanMethod === 'camera' ? (
+                        <div className="mb-8 max-w-lg mx-auto">
+                            <BarcodeScanner
+                                onScanSuccess={handleCameraScan}
+                                onScanFailure={(err) => console.log(err)}
                             />
-                            {isFetching && (
-                                <div className="absolute right-4 top-4">
-                                    <div className="animate-spin h-6 w-6 border-2 border-forest border-t-transparent rounded-full"></div>
-                                </div>
-                            )}
                         </div>
-                    </form>
+                    ) : (
+                        <form onSubmit={handleScan} className="max-w-xl mx-auto mb-8">
+
+                            <div className="relative">
+                                <input
+                                    ref={scanInputRef}
+                                    type="text"
+                                    className="w-full text-center text-2xl tracking-widest p-4 border-2 border-forest rounded-lg focus:ring-4 focus:ring-forest/30 focus:outline-none"
+                                    placeholder="SCAN ISBN"
+                                    value={scanIsbn}
+                                    onChange={(e) => setScanIsbn(e.target.value)}
+                                    disabled={isFetching}
+                                    autoFocus
+                                />
+                                {isFetching && (
+                                    <div className="absolute right-4 top-4">
+                                        <div className="animate-spin h-6 w-6 border-2 border-forest border-t-transparent rounded-full"></div>
+                                    </div>
+                                )}
+                            </div>
+                        </form>
+                    )}
 
                     {scannedBook && (
                         <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 flex flex-col md:flex-row gap-8">
