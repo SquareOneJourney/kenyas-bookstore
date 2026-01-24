@@ -18,6 +18,9 @@ export type { BookRow, OrderRow, CartItemRow, WishlistItemRow, OrderItemRow } fr
 export type Book = {
   id: string;
   title: string;
+  isbn10?: string | null;
+  isbn13?: string | null;
+  list_price_cents?: number | null;
 } & Partial<BookRow> & {
   genre?: string | null;
   stock?: number | null;
