@@ -27,7 +27,7 @@ interface GoogleBooksVolume {
  * TODO: Add support for ISBN-10 and ISBN-13 format detection/normalization
  */
 export const BookService = {
-  
+
   /**
    * Fetches book metadata from Google Books API using ISBN
    * Returns partial Book object with available data, or null if not found
@@ -36,23 +36,33 @@ export const BookService = {
     try {
       // Basic cleaning
       const cleanIsbn = isbn.replace(/[^0-9X]/gi, '');
-      const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanIsbn}`);
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+      console.log(`Fetching from Google Books. ISBN: ${cleanIsbn}, Key Available: ${!!apiKey}`);
+
+      const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanIsbn}&key=${apiKey}`);
+
+      if (!response.ok) {
+        console.error("Google Books API Error Status:", response.status);
+        return null;
+      }
+
       const data = await response.json();
 
       if (data.totalItems > 0 && data.items && data.items.length > 0) {
         const info = data.items[0].volumeInfo as GoogleBooksVolume['volumeInfo'];
-        
+
         return {
           title: info.title,
           author: info.authors ? info.authors.join(', ') : 'Unknown Author',
           description: info.description || '',
-          pageCount: info.pageCount,
+          page_count: info.pageCount,
           publisher: info.publisher,
-          publishedDate: info.publishedDate,
-          coverUrl: info.imageLinks?.thumbnail?.replace('http:', 'https:') || `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-L.jpg`,
+          publication_date: info.publishedDate,
+          cover_url: info.imageLinks?.thumbnail?.replace('http:', 'https:') || `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-L.jpg`,
           genre: info.categories ? info.categories[0] : 'General',
           isbn: cleanIsbn,
-        };
+        } as unknown as Partial<Book>;
       }
       return null;
     } catch (error) {
@@ -74,7 +84,8 @@ export const BookService = {
    */
   async enrichBookData(partialBook: Partial<Book>): Promise<Partial<Book>> {
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const ai = new GoogleGenAI({ apiKey });
       const prompt = `
         I have a book with the following details:
         Title: ${partialBook.title}
@@ -108,8 +119,8 @@ export const BookService = {
     } catch (error) {
       console.error("AI Enrichment Error:", error);
       return {
-          ...partialBook,
-          binding: 'Paperback'
+        ...partialBook,
+        binding: 'Paperback'
       };
     }
   }

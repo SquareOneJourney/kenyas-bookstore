@@ -39,6 +39,7 @@ const AdminLibraryPage: React.FC = () => {
     const [scanIsbn, setScanIsbn] = useState('');
     const [scannedBook, setScannedBook] = useState<Partial<AppBook> | null>(null);
     const [isFetching, setIsFetching] = useState(false);
+    const [debugError, setDebugError] = useState<string | null>(null);
     const scanInputRef = useRef<HTMLInputElement>(null);
 
     const [formCondition, setFormCondition] = useState<BookCondition>('New');
@@ -172,6 +173,12 @@ const AdminLibraryPage: React.FC = () => {
                     <div className="text-center mb-8">
                         <h2 className="text-2xl font-bold text-deep-blue">Scanner Ready</h2>
                         <p className="text-gray-500">Scan ISBN to auto-populate from Google Books & Ingram.</p>
+                        {debugError && (
+                            <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded text-sm text-left font-mono break-all">
+                                <strong>Debug Info:</strong><br />
+                                {debugError}
+                            </div>
+                        )}
                     </div>
 
                     {scanMethod === 'camera' ? (
