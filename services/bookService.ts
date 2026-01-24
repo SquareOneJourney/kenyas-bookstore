@@ -92,6 +92,7 @@ export const BookService = {
    * TODO: Add validation that AI-generated price is within reasonable bounds
    */
   async enrichBookData(partialBook: Partial<Book>): Promise<Partial<Book>> {
+    console.log("BOOK_SERVICE_VERSION: 1.2_GEMINI_1.5_FLASH");
     try {
       const apiKey = env.gemini.apiKey || '';
       if (!apiKey) {

@@ -46,6 +46,7 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const addBooks = async (newBooks: Book[]) => {
+    console.log("BOOK_CONTEXT_VERSION: 1.2_STRICT_SCHEMA");
     setBooks(prev => [...newBooks, ...prev]);
 
     const supabase = getSupabaseClient();
