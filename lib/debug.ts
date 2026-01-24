@@ -15,11 +15,12 @@ export const checkConnections = async () => {
         if (!supabase) {
             results.supabase = { status: 'failed', message: 'Client not initialized (missing env vars?)' };
         } else {
-            const { data, error } = await supabase.from('books').select('count', { count: 'exact', head: true });
+            // Select id and title specifically to check access
+            const { data, error } = await supabase.from('books').select('id, title').limit(1);
             if (error) {
                 results.supabase = { status: 'failed', message: error.message };
             } else {
-                results.supabase = { status: 'success', message: `Connected! Books count: ${data}` }; // data is null for head:true usually but success implies connection
+                results.supabase = { status: 'success', message: `Connected! Tables accessible.` };
             }
         }
     } catch (e: any) {

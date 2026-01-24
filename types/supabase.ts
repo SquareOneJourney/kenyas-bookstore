@@ -19,24 +19,16 @@ export type Database = {
           author: string | null
           availability_message: string | null
           cover_url: string | null
-          created_at: string
-          currency: string | null
+          created_at: string | null
           description: string | null
           estimated_arrival_date: string | null
-          format: string | null
           id: string
-          is_active: boolean
-          isbn10: string | null
-          isbn13: string | null
-          language: string | null
-          list_price_cents: number | null
-          page_count: number | null
-          publication_date: string | null
-          publisher: string | null
+          isbn: string | null
           title: string
-          updated_at: string
+          price: number
           stock: number | null
           genre: string | null
+          condition: string | null
           location: string | null
           tags: string[] | null
           supply_source: string | null
@@ -48,24 +40,16 @@ export type Database = {
           author?: string | null
           availability_message?: string | null
           cover_url?: string | null
-          created_at?: string
-          currency?: string | null
+          created_at?: string | null
           description?: string | null
           estimated_arrival_date?: string | null
-          format?: string | null
-          id?: string
-          is_active?: boolean
-          isbn10?: string | null
-          isbn13?: string | null
-          language?: string | null
-          list_price_cents?: number | null
-          page_count?: number | null
-          publication_date?: string | null
-          publisher?: string | null
+          id: string
+          isbn?: string | null
           title: string
-          updated_at?: string
+          price: number
           stock?: number | null
           genre?: string | null
+          condition?: string | null
           location?: string | null
           tags?: string[] | null
           supply_source?: string | null
@@ -77,22 +61,22 @@ export type Database = {
           author?: string | null
           availability_message?: string | null
           cover_url?: string | null
-          created_at?: string
-          currency?: string | null
+          created_at?: string | null
           description?: string | null
           estimated_arrival_date?: string | null
-          format?: string | null
           id?: string
-          is_active?: boolean
-          isbn10?: string | null
-          isbn13?: string | null
-          language?: string | null
-          list_price_cents?: number | null
-          page_count?: number | null
-          publication_date?: string | null
-          publisher?: string | null
+          isbn?: string | null
           title?: string
-          updated_at?: string
+          price?: number
+          stock?: number | null
+          genre?: string | null
+          condition?: string | null
+          location?: string | null
+          tags?: string[] | null
+          supply_source?: string | null
+          cost_basis?: number | null
+          ingram_stock_level?: string | null
+          last_stock_sync?: string | null
         }
         Relationships: []
       }

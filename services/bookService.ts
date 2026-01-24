@@ -95,10 +95,7 @@ export const BookService = {
     try {
       const apiKey = env.gemini.apiKey || '';
       if (!apiKey) {
-        return {
-          ...partialBook,
-          format: partialBook.format || 'Paperback',
-        };
+        return partialBook;
       }
       const ai = new GoogleGenAI({ apiKey });
       const prompt = `
@@ -110,7 +107,6 @@ export const BookService = {
         1. "short_description": A compelling 2-sentence marketing hook for an online store.
         2. "tags": An array of 5 SEO-friendly tags (lowercase) for finding this book (e.g., "historical fiction", "booktok", "classic").
         3. "market_price_new": An estimated USD price for a New copy.
-        4. "format": The standard binding for this edition (one of: "Hardcover", "Paperback", "Mass Market").
       `;
 
       const response = await ai.models.generateContent({
@@ -131,18 +127,12 @@ export const BookService = {
         ...partialBook,
         description: partialBook.description ? partialBook.description.substring(0, 300) + "..." : aiData.short_description,
         tags: aiData.tags || [],
-        // Convert to dollars for the UI field
         price: aiData.market_price_new || 15.00,
-        list_price_cents: Math.round((aiData.market_price_new || 15.00) * 100),
-        format: aiData.format || 'Paperback',
       } as any;
 
     } catch (error) {
       console.error("AI Enrichment Error:", error);
-      return {
-        ...partialBook,
-        format: 'Paperback'
-      };
+      return partialBook;
     }
   }
 };
