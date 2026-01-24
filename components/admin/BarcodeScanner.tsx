@@ -170,34 +170,20 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
             </div>
 
             {/* Bottom Controls / Camera Selector */}
-            <div className="absolute bottom-10 left-0 right-0 px-8 z-50 flex flex-col items-center gap-8">
+            <div className="absolute bottom-6 left-0 right-0 px-8 z-50 flex justify-center">
                 {cameras.length > 1 && (
                     <div className="flex gap-2 bg-black/60 backdrop-blur-2xl p-1.5 rounded-full border border-white/20 shadow-2xl">
                         {cameras.map((cam, idx) => (
                             <button
                                 key={cam.id}
                                 onClick={() => switchCamera(cam.id)}
-                                className={`px-5 py-2 rounded-full text-[9px] font-black tracking-widest transition-all ${selectedCameraId === cam.id ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white'}`}
+                                className={`px-4 py-2 rounded-full text-[9px] font-black tracking-widest transition-all ${selectedCameraId === cam.id ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white'}`}
                             >
                                 {idx === 0 ? 'WIDE' : idx === 1 ? 'ULTRA' : `LENS ${idx + 1}`}
                             </button>
                         ))}
                     </div>
                 )}
-
-                {/* The "Snap" Button Visual - Auto-scans, but gives users something to interact with */}
-                <button
-                    onClick={() => {
-                        const overlay = document.querySelector('.scanner-overlay-mask');
-                        overlay?.classList.add('bg-white/20');
-                        setTimeout(() => overlay?.classList.remove('bg-white/20'), 100);
-                    }}
-                    className="w-24 h-24 rounded-full border-[6px] border-white/30 p-1 active:scale-90 transition-transform shadow-2xl"
-                >
-                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
-                        <div className="w-[85%] h-[85%] rounded-full border-2 border-black/5"></div>
-                    </div>
-                </button>
             </div>
 
             {error && (
