@@ -8,9 +8,9 @@ import SearchBar from './SearchBar';
 import MegaMenu, { MegaMenuData } from './MegaMenu';
 
 const BookIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-  </svg>
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+    </svg>
 );
 
 const CartIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -21,9 +21,9 @@ const CartIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 
 const HeartIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-  </svg>
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
 );
 
 const UserIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -40,16 +40,16 @@ const MenuIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 
 
 const LocationIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
 );
 
 const ChevronDownIcon = () => (
-  <svg className="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-  </svg>
+    <svg className="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+    </svg>
 );
 
 const Navbar: React.FC = () => {
@@ -328,10 +328,10 @@ const Navbar: React.FC = () => {
     };
 
     return (
-        <header 
+        <header
             className="sticky top-0 z-50 shadow-sm relative"
             style={{
-                backgroundImage: "url('/Book Background.png')",
+                backgroundImage: "url('/Bookstore 4.png')",
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat'
@@ -339,7 +339,7 @@ const Navbar: React.FC = () => {
         >
             {/* Overlay for better text readability */}
             <div className="absolute inset-0 bg-cream/75 pointer-events-none"></div>
-            
+
             {/* Main Header - Logo, Search, Account/Wishlist/Cart */}
             <nav className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="flex items-center justify-between h-20 gap-6">
@@ -350,7 +350,7 @@ const Navbar: React.FC = () => {
                             <span className="text-forest"> BOOKSTORE</span>
                         </span>
                     </Link>
-                    
+
                     {/* Search Bar - Center */}
                     <div className="hidden lg:flex flex-1 max-w-2xl mx-8">
                         <SearchBar variant="navbar" />
@@ -417,8 +417,8 @@ const Navbar: React.FC = () => {
                         <span className="hidden md:block text-gray-300">|</span>
 
                         {/* Wishlist */}
-                        <NavLink 
-                            to="/account" 
+                        <NavLink
+                            to="/account"
                             className="hidden md:flex items-center gap-1 text-deep-blue hover:text-forest transition-colors text-sm"
                             title="Wishlist"
                             aria-label="Wishlist"
@@ -436,8 +436,8 @@ const Navbar: React.FC = () => {
                         <span className="hidden md:block text-gray-300">|</span>
 
                         {/* Cart */}
-                        <NavLink 
-                            to="/cart" 
+                        <NavLink
+                            to="/cart"
                             className="relative text-deep-blue hover:text-forest transition-colors"
                             aria-label="Shopping cart"
                         >
@@ -448,9 +448,9 @@ const Navbar: React.FC = () => {
                                 </span>
                             )}
                         </NavLink>
-                        
+
                         {/* Mobile Menu Button */}
-                        <button 
+                        <button
                             className="lg:hidden text-deep-blue hover:text-forest transition-colors p-2"
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                             aria-label="Menu"
@@ -468,25 +468,25 @@ const Navbar: React.FC = () => {
 
                 {/* Primary Navigation Bar - B&N Style */}
                 <div className="hidden md:flex items-center justify-center border-t border-gray-200 pt-3 pb-3 h-12 relative z-10">
-                    <NavLink 
-                        to="/catalog" 
+                    <NavLink
+                        to="/catalog"
                         className={`${navLinkClasses} flex items-center h-full no-underline ${activeMegaMenu === 'books' ? 'text-forest' : ''}`}
-                        style={({isActive}) => isActive ? activeLinkClasses : undefined}
+                        style={({ isActive }) => isActive ? activeLinkClasses : undefined}
                         onMouseEnter={() => setActiveMegaMenu(null)}
                     >
                         Books
                     </NavLink>
                     <span className="text-gray-300 mx-1 flex items-center h-full">|</span>
-                    
+
                     {/* Fiction with Mega Menu */}
-                    <div 
+                    <div
                         className="relative flex items-center h-full"
                         onMouseEnter={() => setActiveMegaMenu('fiction')}
                     >
-                        <NavLink 
-                            to="/catalog?genre=Fiction" 
+                        <NavLink
+                            to="/catalog?genre=Fiction"
                             className={`${navLinkClasses} flex items-center h-full underline ${activeMegaMenu === 'fiction' ? 'text-forest' : ''}`}
-                            style={({isActive}) => isActive ? activeLinkClasses : undefined}
+                            style={({ isActive }) => isActive ? activeLinkClasses : undefined}
                             aria-expanded={activeMegaMenu === 'fiction'}
                             aria-haspopup="true"
                         >
@@ -496,14 +496,14 @@ const Navbar: React.FC = () => {
                     <span className="text-gray-300 mx-1 flex items-center h-full">|</span>
 
                     {/* Nonfiction with Mega Menu */}
-                    <div 
+                    <div
                         className="relative flex items-center h-full"
                         onMouseEnter={() => setActiveMegaMenu('nonfiction')}
                     >
-                        <NavLink 
-                            to="/catalog?genre=Non-Fiction" 
+                        <NavLink
+                            to="/catalog?genre=Non-Fiction"
                             className={`${navLinkClasses} flex items-center h-full underline ${activeMegaMenu === 'nonfiction' ? 'text-forest' : ''}`}
-                            style={({isActive}) => isActive ? activeLinkClasses : undefined}
+                            style={({ isActive }) => isActive ? activeLinkClasses : undefined}
                             aria-expanded={activeMegaMenu === 'nonfiction'}
                             aria-haspopup="true"
                         >
@@ -512,19 +512,19 @@ const Navbar: React.FC = () => {
                     </div>
                     <span className="text-gray-300 mx-1 flex items-center h-full">|</span>
 
-                    <NavLink 
-                        to="/catalog?sort=newest" 
+                    <NavLink
+                        to="/catalog?sort=newest"
                         className={`${navLinkClasses} flex items-center h-full no-underline`}
-                        style={({isActive}) => isActive ? activeLinkClasses : undefined}
+                        style={({ isActive }) => isActive ? activeLinkClasses : undefined}
                     >
                         New Releases
                     </NavLink>
                     <span className="text-gray-300 mx-1 flex items-center h-full">|</span>
-                    
-                    <NavLink 
-                        to="/catalog?sort=price-desc" 
+
+                    <NavLink
+                        to="/catalog?sort=price-desc"
                         className={`${navLinkClasses} flex items-center h-full no-underline`}
-                        style={({isActive}) => isActive ? activeLinkClasses : undefined}
+                        style={({ isActive }) => isActive ? activeLinkClasses : undefined}
                     >
                         Bestsellers
                     </NavLink>
@@ -539,51 +539,51 @@ const Navbar: React.FC = () => {
                         Kids
                     </NavLink>
                     <span className="text-gray-300 mx-1 flex items-center h-full">|</span> */}
-                    
-                    <NavLink 
-                        to="/gift-finder" 
+
+                    <NavLink
+                        to="/gift-finder"
                         className={`${navLinkClasses} flex items-center h-full`}
-                        style={({isActive}) => isActive ? activeLinkClasses : undefined}
+                        style={({ isActive }) => isActive ? activeLinkClasses : undefined}
                     >
                         Gift Finder
                     </NavLink>
                     <span className="text-gray-300 mx-1 flex items-center h-full">|</span>
-                    
-                    <NavLink 
-                        to="/chess" 
+
+                    <NavLink
+                        to="/chess"
                         className={`${navLinkClasses} flex items-center h-full`}
-                        style={({isActive}) => isActive ? activeLinkClasses : undefined}
+                        style={({ isActive }) => isActive ? activeLinkClasses : undefined}
                     >
                         Chess w/ Kenya
                     </NavLink>
                 </div>
                 {isMenuOpen && (
                     <div className="md:hidden py-4 flex flex-col items-center space-y-4">
-                        <NavLink to="/" className={navLinkClasses} style={({isActive}) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Home</NavLink>
-                        <NavLink to="/catalog?genre=Fiction" className={navLinkClasses} style={({isActive}) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Fiction</NavLink>
-                        <NavLink to="/catalog?genre=Non-Fiction" className={navLinkClasses} style={({isActive}) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Nonfiction</NavLink>
-                        <NavLink to="/catalog?sort=newest" className={navLinkClasses} style={({isActive}) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>New Releases</NavLink>
-                        <NavLink to="/catalog?sort=price-desc" className={navLinkClasses} style={({isActive}) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Bestsellers</NavLink>
-                        <NavLink to="/gift-finder" className={navLinkClasses} style={({isActive}) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Gift Finder</NavLink>
+                        <NavLink to="/" className={navLinkClasses} style={({ isActive }) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Home</NavLink>
+                        <NavLink to="/catalog?genre=Fiction" className={navLinkClasses} style={({ isActive }) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Fiction</NavLink>
+                        <NavLink to="/catalog?genre=Non-Fiction" className={navLinkClasses} style={({ isActive }) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Nonfiction</NavLink>
+                        <NavLink to="/catalog?sort=newest" className={navLinkClasses} style={({ isActive }) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>New Releases</NavLink>
+                        <NavLink to="/catalog?sort=price-desc" className={navLinkClasses} style={({ isActive }) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Bestsellers</NavLink>
+                        <NavLink to="/gift-finder" className={navLinkClasses} style={({ isActive }) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Gift Finder</NavLink>
                         {/* Kids section hidden for now */}
                         {/* <NavLink to="/books-for-kids" className={navLinkClasses} style={({isActive}) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Kids</NavLink> */}
-                        <NavLink to="/chess" className={navLinkClasses} style={({isActive}) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Chess w/ Kenya</NavLink>
-                        <NavLink to="/about" className={navLinkClasses} style={({isActive}) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>About</NavLink>
-                        <NavLink to="/contact" className={navLinkClasses} style={({isActive}) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Contact</NavLink>
-                        <NavLink to="/account" className={navLinkClasses} style={({isActive}) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Account</NavLink>
+                        <NavLink to="/chess" className={navLinkClasses} style={({ isActive }) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Chess w/ Kenya</NavLink>
+                        <NavLink to="/about" className={navLinkClasses} style={({ isActive }) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>About</NavLink>
+                        <NavLink to="/contact" className={navLinkClasses} style={({ isActive }) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Contact</NavLink>
+                        <NavLink to="/account" className={navLinkClasses} style={({ isActive }) => isActive ? activeLinkClasses : undefined} onClick={() => setIsMenuOpen(false)}>Account</NavLink>
                     </div>
                 )}
             </nav>
 
             {/* Mega Menus - Positioned to span full width, directly below nav */}
             <div className="hidden md:block absolute left-0 right-0" style={{ top: '100%' }}>
-                <MegaMenu 
+                <MegaMenu
                     data={fictionMenuData}
                     isOpen={activeMegaMenu === 'fiction'}
                     onClose={() => setActiveMegaMenu(null)}
                     navHeight={navHeight}
                 />
-                <MegaMenu 
+                <MegaMenu
                     data={nonfictionMenuData}
                     isOpen={activeMegaMenu === 'nonfiction'}
                     onClose={() => setActiveMegaMenu(null)}
