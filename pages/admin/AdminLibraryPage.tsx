@@ -81,7 +81,7 @@ const AdminLibraryPage: React.FC = () => {
 
         const priceCents = Math.round((parseFloat(formPrice) || 0) * 100);
         const newBook: Book = {
-            id: `INV-${Date.now()}`,
+            id: self.crypto.randomUUID(), // Use standard UUID for Supabase
             title: scannedBook.title || "Unknown",
             author: scannedBook.author || "Unknown",
             genre: scannedBook.genre || "General",

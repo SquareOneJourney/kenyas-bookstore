@@ -10,7 +10,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
     onScanSuccess,
     onScanFailure,
 }) => {
-    const scannerId = "html5-qrcode-reader";
+    const scannerId = "html5-qrcode-reader-" + React.useId().replace(/:/g, '-');
     const [cameras, setCameras] = useState<any[]>([]);
     const [selectedCameraId, setSelectedCameraId] = useState<string>('');
     const [isScanning, setIsScanning] = useState(false);
@@ -35,7 +35,13 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
                     setError("No cameras found on this device.");
                 }
 
-                // Create instance
+                // Create instance only if element exists
+                const element = document.getElementById(scannerId);
+                if (!element) {
+                    console.warn("Scanner element not found, retrying...");
+                    return;
+                }
+
                 if (!html5QrCodeRef.current) {
                     html5QrCodeRef.current = new Html5Qrcode(scannerId, {
                         verbose: false,
