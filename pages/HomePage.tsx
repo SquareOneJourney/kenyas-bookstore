@@ -9,6 +9,7 @@ import BookCarousel from '../components/BookCarousel';
 import TrustBadges from '../components/TrustBadges';
 import NewsletterSignup from '../components/NewsletterSignup';
 import Button from '../components/ui/Button';
+import { formatMoneyFromCents } from '../lib/money';
 
 const HomePage: React.FC = () => {
   const [newReleases, setNewReleases] = useState<Book[]>([]);
@@ -63,7 +64,7 @@ const HomePage: React.FC = () => {
             <div className="md:flex">
               <div className="md:w-1/3">
                 <img
-                  src={featured[0].coverUrl}
+                  src={featured[0].cover_url || '/placeholder-book.png'}
                   alt={featured[0].title}
                   className="w-full h-full object-cover"
                 />
@@ -78,7 +79,9 @@ const HomePage: React.FC = () => {
                 <p className="text-lg text-gray-700 mb-4">by {featured[0].author}</p>
                 <p className="text-gray-600 mb-6 line-clamp-3">{featured[0].description}</p>
                 <div className="flex items-center gap-4">
-                  <span className="text-3xl font-bold text-forest">${featured[0].price.toFixed(2)}</span>
+                  <span className="text-3xl font-bold text-forest">
+                    {formatMoneyFromCents(featured[0].list_price_cents ?? 0, featured[0].currency || 'USD')}
+                  </span>
                   <Link to={`/book/${featured[0].id}`}>
                     <Button size="lg">Learn More</Button>
                   </Link>

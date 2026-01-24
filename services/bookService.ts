@@ -67,8 +67,9 @@ export const BookService = {
           page_count: info.pageCount,
           publisher: info.publisher,
           publication_date: info.publishedDate,
-          cover_url: info.imageLinks?.thumbnail?.replace('http:', 'https:') || `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-L.jpg`,
+          coverUrl: info.imageLinks?.thumbnail?.replace('http:', 'https:') || `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-L.jpg`,
           genre: info.categories ? info.categories[0] : 'General',
+          isbn: cleanIsbn,
           isbn13: cleanIsbn.length === 13 ? cleanIsbn : null,
           isbn10: cleanIsbn.length === 10 ? cleanIsbn : null,
         } as any;
@@ -94,6 +95,12 @@ export const BookService = {
   async enrichBookData(partialBook: Partial<Book>): Promise<Partial<Book>> {
     try {
       const apiKey = env.gemini.apiKey || '';
+      if (!apiKey) {
+        return {
+          ...partialBook,
+          format: partialBook.format || 'Paperback',
+        };
+      }
       const ai = new GoogleGenAI({ apiKey });
       const prompt = `
         I have a book with the following details:
@@ -108,7 +115,7 @@ export const BookService = {
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         contents: prompt,
         config: { responseMimeType: 'application/json' }
       });
@@ -120,7 +127,8 @@ export const BookService = {
         ...partialBook,
         description: partialBook.description ? partialBook.description.substring(0, 300) + "..." : aiData.short_description,
         tags: aiData.tags || [],
-        // TODO: Remove hardcoded fallback - require manual pricing entry
+        // Convert to dollars for the UI field
+        price: aiData.market_price_new || 15.00,
         list_price_cents: Math.round((aiData.market_price_new || 15.00) * 100),
         format: aiData.format || 'Paperback',
       } as any;

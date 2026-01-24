@@ -7,37 +7,20 @@ import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import { BookService } from '../../services/bookService';
 import { IngramService } from '../../services/ingramService';
+import { formatMoneyFromCents } from '../../lib/money';
 
 import BarcodeScanner from '../../components/admin/BarcodeScanner';
 import { BOOKS as MOCK_BOOKS } from '../../lib/mockData';
 
-// Define the runtime shape of Book objects (which differs from the strict DB type)
-interface AppBook {
-    id: string;
-    title: string;
-    author: string;
-    genre: string;
-    price: number;
-    isbn: string;
-    description: string;
-    stock: number;
-    coverUrl: string; // camelCase matching mockData
-    condition: string;
-    location: string;
-    tags: string[];
-    supplySource: string;
-    costBasis?: number;
-}
-
 const AdminLibraryPage: React.FC = () => {
     const { getBooks, addBooks } = useBooks();
-    const [books, setBooks] = useState<AppBook[]>([]);
+    const [books, setBooks] = useState<Book[]>([]);
 
     const [mode, setMode] = useState<'view' | 'scan'>('view');
     const [scanMethod, setScanMethod] = useState<'manual' | 'camera'>('manual');
 
     const [scanIsbn, setScanIsbn] = useState('');
-    const [scannedBook, setScannedBook] = useState<Partial<AppBook> | null>(null);
+    const [scannedBook, setScannedBook] = useState<Partial<Book> | null>(null);
     const [isFetching, setIsFetching] = useState(false);
     const [debugError, setDebugError] = useState<string | null>(null);
     const scanInputRef = useRef<HTMLInputElement>(null);
@@ -50,7 +33,7 @@ const AdminLibraryPage: React.FC = () => {
     const [ingramStatus, setIngramStatus] = useState<any>(null);
 
     useEffect(() => {
-        getBooks().then((data: any) => setBooks(data));
+        getBooks().then(setBooks);
     }, [getBooks]);
 
     useEffect(() => {
@@ -80,9 +63,11 @@ const AdminLibraryPage: React.FC = () => {
         if (bookData) {
             // 2. Enrich with AI
             const enrichedData = await BookService.enrichBookData(bookData);
-            const appBookData = enrichedData as unknown as AppBook;
-            setScannedBook(appBookData);
-            setFormPrice(appBookData.price?.toString() || '');
+            setScannedBook(enrichedData);
+            const suggestedPrice = enrichedData.list_price_cents
+                ? (enrichedData.list_price_cents / 100).toFixed(2)
+                : '';
+            setFormPrice(suggestedPrice);
 
             // 3. Optional Ingram check
             const ingram = await IngramService.checkStockAndPrice(isbn);
@@ -111,24 +96,30 @@ const AdminLibraryPage: React.FC = () => {
     const handleSaveScannedBook = () => {
         if (!scannedBook) return;
 
-        const newBook: AppBook = {
+        const priceCents = Math.round((parseFloat(formPrice) || 0) * 100);
+        const newBook: Book = {
             id: `INV-${Date.now()}`,
             title: scannedBook.title || "Unknown",
             author: scannedBook.author || "Unknown",
             genre: scannedBook.genre || "General",
-            price: parseFloat(formPrice) || 0,
+            list_price_cents: priceCents || null,
             stock: formSource === 'ingram' ? 999 : (parseInt(formStock) || 1),
-            isbn: scannedBook.isbn || scanIsbn,
+            isbn13: scannedBook.isbn13 || (scanIsbn.length === 13 ? scanIsbn : null),
+            isbn10: scannedBook.isbn10 || (scanIsbn.length === 10 ? scanIsbn : null),
             description: scannedBook.description || "",
-            coverUrl: scannedBook.coverUrl || "https://picsum.photos/200/300",
+            cover_url: scannedBook.cover_url || "https://picsum.photos/200/300",
             condition: formCondition,
             location: formSource === 'ingram' ? 'Ingram Warehouse' : formLocation,
             tags: scannedBook.tags || [],
-            supplySource: formSource,
-            costBasis: ingramStatus?.wholesalePrice || 0,
+            supply_source: formSource,
+            cost_basis: ingramStatus?.wholesalePrice || 0,
+            currency: scannedBook.currency || 'USD',
+            is_active: true,
+            created_at: scannedBook.created_at || new Date().toISOString(),
+            updated_at: scannedBook.updated_at || new Date().toISOString(),
         };
 
-        addBooks([newBook as unknown as Book]);
+        addBooks([newBook]);
         setBooks(prev => [newBook, ...prev]);
 
         setScannedBook(null);
@@ -144,7 +135,7 @@ const AdminLibraryPage: React.FC = () => {
             <div className="flex justify-between items-center mb-8">
                 <h1 className="font-serif text-4xl font-bold text-deep-blue">Inventory Management</h1>
                 <div className="space-x-4">
-                    <Button variant="outline" onClick={() => addBooks(MOCK_BOOKS as any[])}>Seed Mock Data</Button>
+                    <Button variant="outline" onClick={() => addBooks(MOCK_BOOKS)}>Seed Mock Data</Button>
                     <Button variant={mode === 'view' ? 'primary' : 'outline'} onClick={() => setMode('view')}>View All</Button>
                     <Button variant={mode === 'scan' ? 'primary' : 'outline'} onClick={() => {
                         setMode('scan');
@@ -214,7 +205,7 @@ const AdminLibraryPage: React.FC = () => {
                     {scannedBook && (
                         <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 flex flex-col md:flex-row gap-8">
                             <div className="w-32 flex-shrink-0">
-                                <img src={scannedBook.coverUrl} alt="Cover" className="w-full h-auto rounded shadow-md" />
+                                <img src={scannedBook.cover_url} alt="Cover" className="w-full h-auto rounded shadow-md" />
                                 {ingramStatus && (
                                     <div className="mt-4 p-2 bg-blue-50 border border-blue-200 rounded text-[10px] text-blue-800">
                                         <p className="font-bold uppercase mb-1">Ingram Insight</p>
@@ -277,26 +268,26 @@ const AdminLibraryPage: React.FC = () => {
                         {books.map((book) => (
                             <tr key={book.id} className="hover:bg-gray-50">
                                 <td className="p-4">
-                                    <img src={book.coverUrl} alt={book.title} className="w-10 h-14 object-cover rounded shadow-sm" />
+                                    <img src={book.cover_url || '/placeholder-book.png'} alt={book.title} className="w-10 h-14 object-cover rounded shadow-sm" />
                                 </td>
                                 <td className="p-4">
-                                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-tighter ${book.supplySource === 'ingram' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
-                                        {book.supplySource}
+                                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-tighter ${book.supply_source === 'ingram' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                                        {book.supply_source || 'local'}
                                     </span>
                                 </td>
                                 <td className="p-4">
                                     <p className="font-medium text-deep-blue text-sm">{book.title}</p>
-                                    <p className="text-[10px] text-gray-400">{book.isbn}</p>
+                                    <p className="text-[10px] text-gray-400">{book.isbn13 || book.isbn10 || 'N/A'}</p>
                                 </td>
                                 <td className="p-4 font-mono text-xs text-gray-600">
                                     {book.location || "N/A"}
                                 </td>
-                                <td className="p-4 text-sm font-semibold">${book.price.toFixed(2)}</td>
+                                <td className="p-4 text-sm font-semibold">{formatMoneyFromCents(book.list_price_cents ?? 0, book.currency || 'USD')}</td>
                                 <td className="p-4 font-medium">
-                                    {book.supplySource === 'ingram' ? (
+                                    {book.supply_source === 'ingram' ? (
                                         <span className="text-blue-600 text-xs">Drop-ship (Active)</span>
                                     ) : (
-                                        <span className={book.stock < 5 ? 'text-red-600' : 'text-forest'}>{book.stock}</span>
+                                        <span className={book.stock && book.stock < 5 ? 'text-red-600' : 'text-forest'}>{book.stock ?? 0}</span>
                                     )}
                                 </td>
                             </tr>

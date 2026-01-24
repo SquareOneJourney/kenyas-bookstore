@@ -1,18 +1,26 @@
 
 import React, { useState } from 'react';
 import { MOCK_ORDERS } from '../../lib/mockData';
-import { Order, OrderStatus } from '../../types';
+import { OrderWithItems } from '../../types';
 import Button from '../../components/ui/Button';
 import { IngramService } from '../../services/ingramService';
+import { formatMoneyFromCents } from '../../lib/money';
+
+type AdminOrder = OrderWithItems & {
+  customerEmail: string;
+  customerAddress: string;
+  fulfillmentSource: 'ingram' | 'local';
+  trackingNumber?: string;
+};
 
 const AdminOrdersPage: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS.map(o => ({
-      ...o,
-      customerEmail: 'customer@example.com',
-      customerAddress: '123 Main St, New York, NY 10001',
-      fulfillmentSource: Math.random() > 0.5 ? 'ingram' : 'local',
-      status: o.status === 'Processing' ? 'Pending Ingram' : o.status
-  } as Order)));
+  const [orders, setOrders] = useState<AdminOrder[]>(MOCK_ORDERS.map(order => ({
+    ...order,
+    customerEmail: 'customer@example.com',
+    customerAddress: '123 Main St, New York, NY 10001',
+    fulfillmentSource: Math.random() > 0.5 ? 'ingram' : 'local',
+    status: order.status === 'Processing' ? 'Pending Ingram' : order.status,
+  })));
 
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
 
@@ -74,7 +82,7 @@ const AdminOrdersPage: React.FC = () => {
                 </td>
                 <td className="p-4">
                     <p className="font-bold text-deep-blue">{order.id}</p>
-                    <p className="text-xs text-gray-400">{order.date}</p>
+                    <p className="text-xs text-gray-400">{new Date(order.created_at).toLocaleDateString()}</p>
                 </td>
                 <td className="p-4">
                     <p className="text-sm">{order.customerEmail}</p>
@@ -90,7 +98,7 @@ const AdminOrdersPage: React.FC = () => {
                     </span>
                     {order.trackingNumber && <p className="text-[10px] mt-1 font-mono text-gray-500">PO: {order.trackingNumber}</p>}
                 </td>
-                <td className="p-4 font-bold">${order.total.toFixed(2)}</td>
+                <td className="p-4 font-bold">{formatMoneyFromCents(order.total_cents ?? 0, order.currency || 'USD')}</td>
                 <td className="p-4">
                     {order.fulfillmentSource === 'ingram' && order.status === 'Pending Ingram' && (
                         <Button 

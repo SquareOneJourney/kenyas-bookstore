@@ -22,8 +22,8 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const supabase = getSupabaseClient();
 
       if (!supabase) {
-        console.log("Supabase not configured, using mock data");
-        setBooks(INITIAL_BOOKS as any[]);
+        console.log('Supabase not configured, using mock data');
+        setBooks(INITIAL_BOOKS);
         setLoading(false);
         return;
       }
@@ -37,12 +37,7 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.error("Error fetching books:", error);
         setBooks([]);
       } else {
-        if (data && data.length > 0) {
-          // Cast to any because local Supabase types are outdated
-          setBooks(data as any[]);
-        } else {
-          setBooks([]);
-        }
+        setBooks(data ?? []);
       }
       setLoading(false);
     };
@@ -51,59 +46,33 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const addBooks = async (newBooks: Book[]) => {
-    // Optimistic update
     setBooks(prev => [...newBooks, ...prev]);
 
-    // Sync with Supabase
     const supabase = getSupabaseClient();
-    if (supabase) {
-      // Map Book type to DB Insert type (decamelize if needed, 
-      // but our types/db.ts suggests they match snake_case key names mostly?
-      // Wait, 'Book' type in 'types.ts' is 'BookRow' (snake_case).
-      // BUT 'mockData.ts' uses camelCase (coverUrl) ??
-      // Let's check 'types.ts' (Step 22). 'export type Book = BookRow'.
-      // BookRow (Step 46) uses 'cover_url', 'availability_message'.
-      // MockData (Step 55) uses 'coverUrl', 'supplySource'.
+    if (!supabase) return;
 
-      // This mismatch is dangerous. 
-      // 'mockData' seems to define 'Book' interface manually or types.ts is inconsistent.
-      // Step 22: 'Book' is alias for 'BookRow' (snake_case).
-      // Step 55: MOCK_BOOKS has 'coverUrl'. 
-      // TypeScript should have yelled about this mismatch!
-      // Ah, AdminLibraryPage defined 'AppBook' causing issues earlier.
+    const dbBooks = newBooks.map((book) => ({
+      id: book.id,
+      title: book.title,
+      author: book.author ?? null,
+      description: book.description ?? null,
+      cover_url: book.cover_url ?? null,
+      isbn10: book.isbn10 ?? null,
+      isbn13: book.isbn13 ?? null,
+      list_price_cents: book.list_price_cents ?? null,
+      currency: book.currency ?? null,
+      publisher: book.publisher ?? null,
+      publication_date: book.publication_date ?? null,
+      page_count: book.page_count ?? null,
+      format: book.format ?? null,
+      language: book.language ?? null,
+      availability_message: book.availability_message ?? null,
+      estimated_arrival_date: book.estimated_arrival_date ?? null,
+      is_active: book.is_active ?? true,
+    }));
 
-      // We need to ensure we insert correct shape.
-      // Assuming 'newBooks' are matching the DB shape (snake_case) effectively 
-      // OR we need to transform them.
-
-      // Let's look at 'AdminLibraryPage' (Step 127).
-      // It uses 'AppBook' (camelCase).
-
-      // If we want to support Supabase, we MUST use snake_case for DB.
-
-      const dbBooks = newBooks.map(b => {
-        const anyBook = b as any;
-        return {
-          id: b.id,
-          title: b.title,
-          author: b.author,
-          genre: anyBook.genre,
-          price: anyBook.price,
-          stock: anyBook.stock,
-          isbn: anyBook.isbn || anyBook.isbn13,
-          description: b.description,
-          cover_url: anyBook.coverUrl || anyBook.cover_url,
-          condition: anyBook.condition,
-          location: anyBook.location,
-          tags: anyBook.tags,
-          supply_source: anyBook.supplySource || anyBook.supply_source,
-          cost_basis: anyBook.costBasis || anyBook.cost_basis,
-        };
-      });
-
-      const { error } = await supabase.from('books').insert(dbBooks);
-      if (error) console.error("Error adding books to DB:", error);
-    }
+    const { error } = await supabase.from('books').insert(dbBooks);
+    if (error) console.error('Error adding books to DB:', error);
   };
 
   return (

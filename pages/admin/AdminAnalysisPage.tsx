@@ -5,6 +5,7 @@ import { useBooks } from '../../hooks/useBooks';
 import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import { env } from '../../lib/env';
 
 // AI-related types
 interface BookAnalysis {
@@ -63,11 +64,11 @@ const AdminAnalysisPage: React.FC = () => {
     resetState();
 
     try {
-        const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
+        const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
         const prompt = `You are an expert librarian. Based on the user's query, identify the most likely book they are referring to. Query: "${newBookQuery}". Provide ONLY the book's official title and full author name in a JSON object with keys "title" and "author".`;
         
         const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-1.5-flash',
           contents: prompt,
         });
 
@@ -94,7 +95,12 @@ const AdminAnalysisPage: React.FC = () => {
         setError("Selected book not found.");
         return;
       }
-      bookToAnalyze = { ...selectedBook, format: 'paperback' }; // Assume library books are paperback for now
+      bookToAnalyze = {
+        title: selectedBook.title,
+        author: selectedBook.author || 'Unknown',
+        description: selectedBook.description || '',
+        format: 'paperback',
+      };
     } else {
       if (!identifiedBook) {
         setError("Please find and confirm a book before analyzing.");
@@ -109,7 +115,7 @@ const AdminAnalysisPage: React.FC = () => {
     setNeedsConfirmation(false);
 
     try {
-      const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
+      const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
 
       const prompt = `
         You are a savvy e-commerce pricing manager for "Kenya's Bookstore," an online retailer aiming for competitive market pricing. 
@@ -130,7 +136,7 @@ const AdminAnalysisPage: React.FC = () => {
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         contents: prompt,
         config: {
           tools: [{googleSearch: {}}],

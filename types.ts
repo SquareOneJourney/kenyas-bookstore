@@ -11,12 +11,24 @@ import { BookRow, OrderRow, CartItemRow, WishlistItemRow, OrderItemRow } from '.
 export type { BookRow, OrderRow, CartItemRow, WishlistItemRow, OrderItemRow } from './types/db';
 
 /**
- * App-level Book type (compatible with DB schema)
+ * App-level Book type
  * 
- * This is an alias for BookRow to maintain compatibility.
- * All fields match the database exactly (snake_case).
+ * Extends the DB schema with optional catalog metadata used in UI flows.
  */
-export type Book = BookRow;
+export type Book = {
+  id: string;
+  title: string;
+} & Partial<BookRow> & {
+  genre?: string | null;
+  stock?: number | null;
+  condition?: BookCondition | string | null;
+  location?: string | null;
+  tags?: string[] | null;
+  supply_source?: SupplySource | string | null;
+  cost_basis?: number | null;
+  ingram_stock_level?: 'In Stock' | 'Low Stock' | 'Out of Stock' | string | null;
+  last_stock_sync?: string | null;
+};
 
 /**
  * Cart item with book data

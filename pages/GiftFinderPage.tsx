@@ -7,6 +7,8 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import { Link } from 'react-router-dom';
+import { env } from '../lib/env';
+import { formatMoneyFromCents } from '../lib/money';
 
 // Types for the Gift Finder
 interface UserPreferences {
@@ -75,7 +77,12 @@ const GiftFinderPage: React.FC = () => {
   }, [getBooks]);
 
   const findBook = (title: string, author: string): Book | undefined => {
-    return allBooks.find(b => b.title.toLowerCase() === title.toLowerCase() && b.author.toLowerCase() === author.toLowerCase());
+    const normalizedTitle = title.toLowerCase();
+    const normalizedAuthor = author.toLowerCase();
+    return allBooks.find((book) => {
+      const bookAuthor = (book.author || '').toLowerCase();
+      return book.title.toLowerCase() === normalizedTitle && bookAuthor === normalizedAuthor;
+    });
   };
 
   const handleFindGift = async () => {
@@ -92,10 +99,16 @@ const GiftFinderPage: React.FC = () => {
     setCitations([]);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
 
-      const catalogForPrompt = allBooks.map(({ id, title, author, description, genre, price, stock }) => ({
-        id, title, author, description, genre, price, inventory: stock
+      const catalogForPrompt = allBooks.map(({ id, title, author, description, genre, list_price_cents, stock }) => ({
+        id,
+        title,
+        author,
+        description,
+        genre,
+        price: list_price_cents ? Number((list_price_cents / 100).toFixed(2)) : 0,
+        inventory: stock ?? 0
       }));
 
       const user_preferences: UserPreferences = {
@@ -198,7 +211,7 @@ const GiftFinderPage: React.FC = () => {
       };
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         contents: prompt,
         config: genAIConfig
       });
@@ -261,7 +274,7 @@ const GiftFinderPage: React.FC = () => {
         
         <Link to={`/book/${rec.book.id}`} className="block">
             <div className="relative">
-                <img src={rec.book.coverUrl} alt={`Cover of ${rec.book.title}`} className="w-full h-64 object-cover" />
+                <img src={rec.book.cover_url || '/placeholder-book.png'} alt={`Cover of ${rec.book.title}`} className="w-full h-64 object-cover" />
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-300"></div>
             </div>
         </Link>
@@ -271,7 +284,9 @@ const GiftFinderPage: React.FC = () => {
             </Link>
             <p className="text-sm text-gray-600 mb-2">{rec.book.author}</p>
             <div className="flex items-center justify-between mt-auto">
-                <p className="text-lg font-semibold text-forest">${rec.book.price.toFixed(2)}</p>
+                <p className="text-lg font-semibold text-forest">
+                  {formatMoneyFromCents(rec.book.list_price_cents ?? 0, rec.book.currency || 'USD')}
+                </p>
             </div>
         </div>
 

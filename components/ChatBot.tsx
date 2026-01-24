@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Chat } from '@google/genai';
 import { useBooks } from '../hooks/useBooks';
 import { Book } from '../types';
+import { env } from '../lib/env';
 
 const ChatIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -65,15 +66,18 @@ const ChatBot: React.FC = () => {
 
         try {
             if (!chatRef.current) {
-                const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+                const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
                 
                 // Construct a lightweight catalog string for the system prompt
                 const catalogContext = catalog
-                    .map(b => `- "${b.title}" by ${b.author} (${b.genre}, $${b.price})`)
+                    .map((b) => {
+                        const price = b.list_price_cents ? `$${(b.list_price_cents / 100).toFixed(2)}` : 'Price unavailable';
+                        return `- "${b.title}" by ${b.author || 'Unknown Author'} (${b.genre || 'General'}, ${price})`;
+                    })
                     .join('\n');
 
                 chatRef.current = ai.chats.create({
-                    model: 'gemini-2.5-flash',
+                    model: 'gemini-1.5-flash',
                     config: {
                         systemInstruction: `You are Kenya, the warm, literate, and helpful owner of "Kenya's Bookstore".
                         

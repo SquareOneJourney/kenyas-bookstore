@@ -4,12 +4,14 @@ import { useBooks } from '../../hooks/useBooks';
 import { Book } from '../../types';
 import Button from '../../components/ui/Button';
 import { GoogleGenAI } from '@google/genai';
+import { env } from '../../lib/env';
+import { formatMoneyFromCents } from '../../lib/money';
 
 const AdminMarketingPage: React.FC = () => {
   const { getBooks } = useBooks();
   const [books, setBooks] = useState<Book[]>([]);
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
-  const [generatedBundle, setGeneratedBundle] = useState<{name: string, description: string, price: number} | null>(null);
+  const [generatedBundle, setGeneratedBundle] = useState<{name: string, description: string, price_cents: number} | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -28,7 +30,7 @@ const AdminMarketingPage: React.FC = () => {
 
     try {
         const selectedData = books.filter(b => selectedBooks.includes(b.id));
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
         
         const prompt = `
             I want to sell these specific books as a "Curated Bundle" or "Mystery Box".
@@ -42,7 +44,7 @@ const AdminMarketingPage: React.FC = () => {
         `;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-1.5-flash',
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
@@ -50,13 +52,13 @@ const AdminMarketingPage: React.FC = () => {
         const text = response.text.replace(/```json|```/g, '').trim();
         const data = JSON.parse(text);
         
-        const totalPrice = selectedData.reduce((sum, b) => sum + b.price, 0);
-        const discountPrice = totalPrice * 0.85; // 15% discount for bundles
+        const totalPriceCents = selectedData.reduce((sum, b) => sum + (b.list_price_cents ?? 0), 0);
+        const discountPriceCents = Math.round(totalPriceCents * 0.85); // 15% discount for bundles
 
         setGeneratedBundle({
             name: data.name,
             description: data.description,
-            price: discountPrice
+            price_cents: discountPriceCents
         });
 
     } catch (e) {
@@ -82,13 +84,15 @@ const AdminMarketingPage: React.FC = () => {
                              className={`p-3 rounded border flex justify-between items-center cursor-pointer transition-colors ${selectedBooks.includes(book.id) ? 'border-forest bg-forest/5' : 'border-gray-200 hover:border-accent'}`}>
                             <div className="flex items-center gap-3">
                                 <input type="checkbox" checked={selectedBooks.includes(book.id)} readOnly className="h-4 w-4 text-forest" />
-                                <img src={book.coverUrl} className="w-8 h-12 object-cover rounded" alt="" />
+                                <img src={book.cover_url || '/placeholder-book.png'} className="w-8 h-12 object-cover rounded" alt="" />
                                 <div>
                                     <p className="font-medium text-sm">{book.title}</p>
-                                    <p className="text-xs text-gray-500">{book.stock} in stock • {book.condition}</p>
+                                    <p className="text-xs text-gray-500">{book.stock ?? 0} in stock • {book.condition || 'New'}</p>
                                 </div>
                             </div>
-                            <p className="font-bold text-sm">${book.price}</p>
+                            <p className="font-bold text-sm">
+                              {formatMoneyFromCents(book.list_price_cents ?? 0, book.currency || 'USD')}
+                            </p>
                         </div>
                     ))}
                 </div>
@@ -114,7 +118,9 @@ const AdminMarketingPage: React.FC = () => {
                             <p className="text-sm italic mb-4 opacity-90">"{generatedBundle.description}"</p>
                             <div className="flex justify-between items-center border-t border-white/20 pt-4">
                                 <span className="text-sm">Bundle Price</span>
-                                <span className="text-xl font-bold text-accent">${generatedBundle.price.toFixed(2)}</span>
+                                <span className="text-xl font-bold text-accent">
+                                  {formatMoneyFromCents(generatedBundle.price_cents)}
+                                </span>
                             </div>
                             <button className="w-full mt-4 py-2 bg-green-700 hover:bg-green-600 rounded text-sm font-bold">
                                 Create Product & Publish

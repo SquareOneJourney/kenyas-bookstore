@@ -7,6 +7,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '../components/ui/
 import { Separator } from '../components/ui/separator';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '../components/ui/breadcrumb';
 import AppSidebar from '../components/AppSidebar';
+import { env } from '../lib/env';
 
 
 type Difficulty = 'easy' | 'medium' | 'hard';
@@ -68,7 +69,7 @@ const ChessPage: React.FC = () => {
     const maxRetries = 3;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
         const pgn = game.pgn();
         const prompt = `You are Kenya, a friendly and encouraging chess partner. Your opponent (White) just made the move: ${userMoveSan}. The game history is in PGN format.
 ${getDifficultyPrompt()}
@@ -81,7 +82,7 @@ Your response must be a valid JSON object with one key:
 PGN:
 ${pgn}`;
         const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-1.5-flash',
           contents: prompt,
           config: {
             responseMimeType: 'application/json',
@@ -120,7 +121,7 @@ ${pgn}`;
     const maxRetries = 3;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
         const pgn = game.pgn();
         const prompt = `You are Kenya, a friendly and encouraging chess partner. It is your turn to play. Your color is black. The game history is in PGN format.
 ${getDifficultyPrompt()}
@@ -132,7 +133,7 @@ Your response must be a valid JSON object with two keys:
 PGN:
 ${pgn}`;
         const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-1.5-flash',
           contents: prompt,
           config: {
             responseMimeType: 'application/json',

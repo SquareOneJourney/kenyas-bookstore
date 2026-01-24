@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { Wish, Book } from '../types';
+import { env } from '../lib/env';
 import Button from './ui/Button';
 
 interface GeminiRecommendation {
@@ -26,7 +27,7 @@ const DonationModal: React.FC<{
       setIsLoading(true);
       setError(null);
       try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
         const libraryForPrompt = allBooks.map(({ title, author, genre, description }) => ({ title, author, genre, description }));
 
         const prompt = `
@@ -40,7 +41,7 @@ const DonationModal: React.FC<{
         `;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-1.5-flash',
             contents: prompt,
         });
 
@@ -66,13 +67,13 @@ const DonationModal: React.FC<{
     if (!selectedBook) return;
     setIsSuggesting(true);
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
         const prompt = `
             Write a short, anonymous, encouraging message (2-3 sentences) to a ${wish.age}-year-old child who will receive the book "${selectedBook.title}". The message should be warm, supportive, and reflect the book's positive themes.
             The child's interests are "${wish.interests}" and the requested theme was "${wish.theme}".
         `;
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-1.5-flash',
             contents: prompt,
         });
         setDonorNote(response.text.trim());
@@ -112,7 +113,7 @@ const DonationModal: React.FC<{
                 className={`p-2 border-2 rounded-lg cursor-pointer transition-all ${selectedBook?.id === book.id ? 'border-forest bg-forest/10' : 'border-transparent hover:border-accent'}`}
                 onClick={() => setSelectedBook(book)}
               >
-                <img src={book.coverUrl} alt={book.title} className="w-full h-48 object-cover rounded" />
+                <img src={book.cover_url || '/placeholder-book.png'} alt={book.title} className="w-full h-48 object-cover rounded" />
                 <p className="font-semibold text-sm mt-2 text-center">{book.title}</p>
               </div>
             ))}

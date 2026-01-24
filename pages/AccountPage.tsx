@@ -1,11 +1,12 @@
 import React, { useState, FormEvent } from 'react';
 import { MOCK_ORDERS } from '../lib/mockData';
-import { Order } from '../types';
+import { OrderWithItems } from '../types';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import { useWishlist } from '../hooks/useWishlist';
 import { useAuth } from '../context/AuthContext';
 import BookCard from '../components/BookCard';
+import { formatMoneyFromCents } from '../lib/money';
 
 const AccountTabs: React.FC<{
   activeTab: string;
@@ -56,12 +57,12 @@ const OrdersPanel: React.FC = () => (
   <div>
     <h2 className="text-2xl font-semibold mb-4">Your Past Orders</h2>
     <div className="space-y-6">
-      {MOCK_ORDERS.map((order: Order) => (
+      {MOCK_ORDERS.map((order: OrderWithItems) => (
         <div key={order.id} className="bg-white p-4 rounded-lg shadow-sm border">
           <div className="flex justify-between items-center mb-2">
             <div>
               <p className="font-bold">Order ID: {order.id}</p>
-              <p className="text-sm text-gray-500">Date: {order.date}</p>
+              <p className="text-sm text-gray-500">Date: {new Date(order.created_at).toLocaleDateString()}</p>
             </div>
             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${order.status === 'Delivered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
               {order.status}
@@ -71,12 +72,12 @@ const OrdersPanel: React.FC = () => (
             {order.items.map(item => (
               <div key={item.id} className="text-sm flex justify-between py-1">
                 <span>{item.title} (x{item.quantity})</span>
-                <span>${(item.price * item.quantity).toFixed(2)}</span>
+                <span>{formatMoneyFromCents(item.unit_price_cents * item.quantity, order.currency || 'USD')}</span>
               </div>
             ))}
           </div>
           <div className="text-right font-bold mt-2 pt-2 border-t">
-            Total: ${order.total.toFixed(2)}
+            Total: {formatMoneyFromCents(order.total_cents ?? 0, order.currency || 'USD')}
           </div>
         </div>
       ))}

@@ -1,5 +1,5 @@
 
-import { Book, Order } from '../types';
+import { Book, OrderWithItems } from '../types';
 
 /**
  * INGRAM CONTENT GROUP INTEGRATION SERVICE (SCAFFOLD)
@@ -50,19 +50,25 @@ export const IngramService = {
   /**
    * Places a Purchase Order (PO) to Ingram for Drop Shipping.
    */
-  async placeDropShipOrder(order: Order): Promise<{ success: boolean, ingramOrderNumber?: string, error?: string }> {
+  async placeDropShipOrder(
+    order: OrderWithItems & {
+      customerEmail?: string;
+      customerAddress?: string;
+      shippingMethod?: 'standard' | 'express';
+    }
+  ): Promise<{ success: boolean, ingramOrderNumber?: string, error?: string }> {
     console.log(`[IngramService] Placing drop-ship order for: ${order.id}`);
 
     // This payload matches Ingram's standard PO format
     const payload = {
         orderId: order.id,
-        customerName: order.customerEmail, // Simplified
+        customerName: order.customerEmail,
         address: order.customerAddress,
         shippingSpeed: order.shippingMethod === 'express' ? 'TwoDay' : 'Standard',
-        lines: order.items.map(item => ({
-            isbn: item.isbn,
+        lines: order.items?.map((item) => ({
+            isbn: item.book_id || '',
             quantity: item.quantity
-        }))
+        })) || []
     };
 
     try {
@@ -88,18 +94,21 @@ export const IngramService = {
    */
   async syncCatalog(books: Book[]): Promise<Book[]> {
       console.log(`[IngramService] Syncing ${books.length} titles...`);
-      const ingramBooks = books.filter(b => b.supplySource === 'ingram');
+      const ingramBooks = books.filter(b => b.supply_source === 'ingram');
       
       const syncedBooks = await Promise.all(ingramBooks.map(async (book) => {
-          const status = await this.checkStockAndPrice(book.isbn);
-          if (status) {
-              return {
-                  ...book,
-                  ingramStockLevel: status.stockLevel,
-                  costBasis: status.wholesalePrice,
-                  lastStockSync: new Date().toISOString()
-              };
-          }
+           const isbn = book.isbn13 || book.isbn10;
+           if (!isbn) return book;
+
+           const status = await this.checkStockAndPrice(isbn);
+           if (status) {
+               return {
+                   ...book,
+                   ingram_stock_level: status.stockLevel,
+                   cost_basis: status.wholesalePrice,
+                   last_stock_sync: new Date().toISOString()
+               };
+           }
           return book;
       }));
 

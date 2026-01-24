@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listActiveBooks } from '../services/books';
 import { Book } from '../types';
+import { formatMoneyFromCents } from '../lib/money';
 
 interface SearchBarProps {
   variant?: 'navbar' | 'page';
@@ -200,11 +201,13 @@ const SearchBar: React.FC<SearchBarProps> = ({ variant = 'navbar', onSelect }) =
               role="option"
               aria-selected={index === selectedIndex}
             >
-              <img src={book.coverUrl} alt={book.title} className="w-12 h-16 object-cover rounded" />
+              <img src={book.cover_url || '/placeholder-book.png'} alt={book.title} className="w-12 h-16 object-cover rounded" />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-deep-blue truncate">{book.title}</p>
                 <p className="text-sm text-gray-600 truncate">by {book.author}</p>
-                <p className="text-xs text-gray-500">${book.price.toFixed(2)}</p>
+                <p className="text-xs text-gray-500">
+                  {formatMoneyFromCents(book.list_price_cents ?? 0, book.currency || 'USD')}
+                </p>
               </div>
             </button>
           ))}
@@ -215,4 +218,3 @@ const SearchBar: React.FC<SearchBarProps> = ({ variant = 'navbar', onSelect }) =
 };
 
 export default SearchBar;
-
