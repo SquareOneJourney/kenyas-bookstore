@@ -68,6 +68,14 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       language: book.language ?? null,
       availability_message: book.availability_message ?? null,
       estimated_arrival_date: book.estimated_arrival_date ?? null,
+      stock: book.stock ?? 0,
+      genre: book.genre ?? null,
+      location: book.location ?? null,
+      tags: book.tags ?? null,
+      supply_source: book.supply_source ?? 'local',
+      cost_basis: book.cost_basis ?? null,
+      ingram_stock_level: book.ingram_stock_level ?? null,
+      last_stock_sync: book.last_stock_sync ?? null,
       is_active: book.is_active ?? true,
     }));
 
