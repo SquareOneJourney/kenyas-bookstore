@@ -60,7 +60,7 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       isbn10: book.isbn10 ?? null,
       isbn13: book.isbn13 ?? null,
       list_price_cents: book.list_price_cents ?? null,
-      currency: book.currency ?? null,
+      // currency: book.currency ?? null, // Column missing in DB
       publisher: book.publisher ?? null,
       publication_date: book.publication_date ?? null,
       page_count: book.page_count ?? null,
