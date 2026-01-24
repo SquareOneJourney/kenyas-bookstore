@@ -44,7 +44,7 @@ function validateEnv(): EnvConfig {
       webhookSecret: null, // Server-side only, not available in client
     },
     gemini: {
-      apiKey: import.meta.env.GEMINI_API_KEY || null,
+      apiKey: import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY || null,
     },
   };
 
@@ -60,7 +60,7 @@ function validateEnv(): EnvConfig {
       console.warn('⚠️  VITE_STRIPE_PUBLISHABLE_KEY is not set. Stripe features will be disabled.');
     }
     if (!config.gemini.apiKey) {
-      console.warn('⚠️  GEMINI_API_KEY is not set. AI features will be disabled.');
+      console.warn('⚠️  VITE_GEMINI_API_KEY is not set. AI features will be disabled.');
     }
   }
 

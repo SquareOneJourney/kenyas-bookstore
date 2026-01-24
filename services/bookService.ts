@@ -1,6 +1,7 @@
 
 import { GoogleGenAI } from '@google/genai';
 import { Book, BookCondition } from '../types';
+import { env } from '../lib/env';
 
 interface GoogleBooksVolume {
   volumeInfo: {
@@ -36,7 +37,7 @@ export const BookService = {
     try {
       // Basic cleaning
       const cleanIsbn = isbn.replace(/[^0-9X]/gi, '');
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const apiKey = env.gemini.apiKey;
 
       console.log(`Fetching from Google Books. ISBN: ${cleanIsbn}, Key Available: ${!!apiKey}`);
 
@@ -84,7 +85,7 @@ export const BookService = {
    */
   async enrichBookData(partialBook: Partial<Book>): Promise<Partial<Book>> {
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const apiKey = env.gemini.apiKey || '';
       const ai = new GoogleGenAI({ apiKey });
       const prompt = `
         I have a book with the following details:
@@ -114,7 +115,7 @@ export const BookService = {
         // TODO: Remove hardcoded fallback - require manual pricing entry
         price: aiData.market_price_new || 15.00,
         binding: aiData.binding || 'Paperback',
-      };
+      } as any;
 
     } catch (error) {
       console.error("AI Enrichment Error:", error);
