@@ -44,7 +44,7 @@ function validateEnv(): EnvConfig {
       webhookSecret: null, // Server-side only, not available in client
     },
     gemini: {
-      apiKey: import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY || null,
+      apiKey: import.meta.env.VITE_GEMINI_API_KEY || null,
     },
   };
 

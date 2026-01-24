@@ -110,20 +110,14 @@ export const BookService = {
         3. "market_price_new": An estimated USD price for a New copy.
       `;
 
-      console.log("BOOK_SERVICE_VERSION: 1.4_STABLE_STRING");
-      const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: prompt }]
-          }
-        ],
-        config: { responseMimeType: 'application/json' }
-      });
+      console.log("BOOK_SERVICE_VERSION: 1.6_SDK_REFINED");
+      // Use standard SDK pattern
+      // @ts-ignore
+      const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-      const text = response.text.replace(/```json|```/g, '').trim();
-      const aiData = JSON.parse(text);
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+      const aiData = JSON.parse(responseText.replace(/```json|```/g, '').trim());
 
       return {
         ...partialBook,
