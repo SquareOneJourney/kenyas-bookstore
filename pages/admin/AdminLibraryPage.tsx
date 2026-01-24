@@ -59,6 +59,7 @@ const AdminLibraryPage: React.FC = () => {
     }, [mode, scannedBook]);
 
     const processIsbn = async (isbn: string) => {
+        console.log("Processing Scanned ISBN:", isbn);
         if (!isbn.trim()) return;
 
         // Avoid re-processing if we are already busy with this exact ISBN? 
