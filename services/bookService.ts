@@ -41,10 +41,17 @@ export const BookService = {
 
       console.log(`Fetching from Google Books. ISBN: ${cleanIsbn}, Key Available: ${!!apiKey}`);
 
-      const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanIsbn}`);
+      const url = new URL('https://www.googleapis.com/books/v1/volumes');
+      url.searchParams.append('q', `isbn:${cleanIsbn}`);
+      if (apiKey) {
+        url.searchParams.append('key', apiKey);
+      }
+
+      const response = await fetch(url.toString());
 
       if (!response.ok) {
-        console.error("Google Books API Error Status:", response.status);
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Google Books API Error Status:", response.status, errorData);
         return null;
       }
 
@@ -62,8 +69,9 @@ export const BookService = {
           publication_date: info.publishedDate,
           cover_url: info.imageLinks?.thumbnail?.replace('http:', 'https:') || `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-L.jpg`,
           genre: info.categories ? info.categories[0] : 'General',
-          isbn: cleanIsbn,
-        } as unknown as Partial<Book>;
+          isbn13: cleanIsbn.length === 13 ? cleanIsbn : null,
+          isbn10: cleanIsbn.length === 10 ? cleanIsbn : null,
+        } as any;
       }
       return null;
     } catch (error) {
@@ -96,7 +104,7 @@ export const BookService = {
         1. "short_description": A compelling 2-sentence marketing hook for an online store.
         2. "tags": An array of 5 SEO-friendly tags (lowercase) for finding this book (e.g., "historical fiction", "booktok", "classic").
         3. "market_price_new": An estimated USD price for a New copy.
-        4. "binding": The standard binding for this edition (one of: "Hardcover", "Paperback", "Mass Market").
+        4. "format": The standard binding for this edition (one of: "Hardcover", "Paperback", "Mass Market").
       `;
 
       const response = await ai.models.generateContent({
@@ -113,15 +121,15 @@ export const BookService = {
         description: partialBook.description ? partialBook.description.substring(0, 300) + "..." : aiData.short_description,
         tags: aiData.tags || [],
         // TODO: Remove hardcoded fallback - require manual pricing entry
-        price: aiData.market_price_new || 15.00,
-        binding: aiData.binding || 'Paperback',
+        list_price_cents: Math.round((aiData.market_price_new || 15.00) * 100),
+        format: aiData.format || 'Paperback',
       } as any;
 
     } catch (error) {
       console.error("AI Enrichment Error:", error);
       return {
         ...partialBook,
-        binding: 'Paperback'
+        format: 'Paperback'
       };
     }
   }
