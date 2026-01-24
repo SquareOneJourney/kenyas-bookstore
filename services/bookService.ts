@@ -92,47 +92,35 @@ export const BookService = {
    * TODO: Add validation that AI-generated price is within reasonable bounds
    */
   async enrichBookData(partialBook: Partial<Book>): Promise<Partial<Book>> {
-    console.log("BOOK_SERVICE_VERSION: 1.2_GEMINI_1.5_FLASH");
     try {
       const apiKey = env.gemini.apiKey || '';
-      if (!apiKey) {
-        return partialBook;
-      }
-      const ai = new GoogleGenAI({ apiKey });
-      const prompt = `
-        I have a book with the following details:
-        Title: ${partialBook.title}
-        Author: ${partialBook.author}
-        
-        Please provide the following in a JSON object:
-        1. "short_description": A compelling 2-sentence marketing hook for an online store.
-        2. "tags": An array of 5 SEO-friendly tags (lowercase) for finding this book (e.g., "historical fiction", "booktok", "classic").
-        3. "market_price_new": An estimated USD price for a New copy.
-      `;
+      if (!apiKey) return partialBook;
 
-      console.log("BOOK_SERVICE_VERSION: 1.6_SDK_REFINED");
-      // Use standard SDK pattern
+      const ai = new GoogleGenAI({ apiKey });
       // @ts-ignore
       const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+      const prompt = `
+        I have a book: "${partialBook.title}" by "${partialBook.author}".
+        Return a JSON object with: 
+        "description": 2-sentence marketing hook.
+        "tags": [5 tag strings].
+        "price": Estimated USD price.
+      `;
+
       const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
-      const aiData = JSON.parse(responseText.replace(/```json|```/g, '').trim());
+      const text = result.response.text();
+      const data = JSON.parse(text.replace(/```json|```/g, '').trim());
 
       return {
         ...partialBook,
-        description: partialBook.description || aiData.short_description || '',
-        tags: aiData.tags || [],
-        price: aiData.market_price_new || 15.00,
+        description: partialBook.description || data.description || '',
+        tags: data.tags || [],
+        price: data.price || 15.00,
       } as any;
-
-    } catch (error) {
-      console.warn("AI Enrichment failed, using basic data fallback:", error);
-      return {
-        ...partialBook,
-        price: partialBook.price || 15.00,
-        tags: []
-      } as any;
+    } catch (e) {
+      console.error("AI Error:", e);
+      return partialBook;
     }
   }
 };

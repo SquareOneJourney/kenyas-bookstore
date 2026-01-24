@@ -65,18 +65,13 @@ const AdminAnalysisPage: React.FC = () => {
 
     try {
       const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
-      const prompt = `You are an expert librarian. Based on the user's query, identify the most likely book they are referring to. Query: "${newBookQuery}". Provide ONLY the book's official title and full author name in a JSON object with keys "title" and "author".`;
-
       // @ts-ignore
-      const model = ai.getGenerativeModel({
-        model: 'gemini-1.5-flash',
-        generationConfig: { responseMimeType: 'application/json' }
-      });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
+      const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const prompt = `Identify this book: "${newBookQuery}". Return JSON: {"title": "string", "author": "string"}`;
 
-      const text = response.text.replace(/```json|```/g, '').trim();
-      const foundBook = JSON.parse(text) as IdentifiedBook;
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+      const foundBook = JSON.parse(text.replace(/```json|```/g, '').trim()) as IdentifiedBook;
       setIdentifiedBook(foundBook);
       setNeedsConfirmation(true);
 
@@ -119,40 +114,30 @@ const AdminAnalysisPage: React.FC = () => {
 
     try {
       const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
+      // @ts-ignore
+      const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const prompt = `
-        You are a savvy e-commerce pricing manager for "Kenya's Bookstore," an online retailer aiming for competitive market pricing. 
-        Your primary goal is to suggest a price that can compete with major online booksellers.
+        Analyze this book for "Kenya's Bookstore":
+        Title: "${bookToAnalyze.title}"
+        Author: "${bookToAnalyze.author}"
+        Format: ${bookToAnalyze.format}
 
-        **CRITICAL INSTRUCTION:** Before answering, use your Google Search tool to find the current average online selling price for the specified book and format. Your final suggested price MUST be informed by this real-time data.
-
-        **Book Details:**
-        - Title: "${bookToAnalyze.title}"
-        - Author: "${bookToAnalyze.author}"
-        - Format: ${bookToAnalyze.format}
-
-        Analyze the book and provide your output in a valid JSON object with the following keys:
-        - "suggested_price": A number representing the competitive online price.
-        - "rationale": A brief explanation of your pricing decision, explicitly mentioning how the live market data from your search influenced the number.
-        - "target_audience": A description of the ideal reader.
-        - "marketing_angles": An array of 3-4 creative marketing angles or hooks.
+        Return JSON:
+        "suggested_price": number,
+        "rationale": string,
+        "target_audience": string,
+        "marketing_angles": [stringArray]
       `;
 
-      // @ts-ignore
-      const model = ai.getGenerativeModel({
-        model: 'gemini-1.5-flash',
-        generationConfig: { responseMimeType: 'application/json' }
-      });
-
       const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      const parsedAnalysis = JSON.parse(text) as BookAnalysis;
+      const text = result.response.text();
+      const parsedAnalysis = JSON.parse(text.replace(/```json|```/g, '').trim()) as BookAnalysis;
       setAnalysis(parsedAnalysis);
 
     } catch (e) {
-      console.error("Error analyzing book:", e);
-      setError("Failed to get analysis. Please check your API key and try again.");
+      console.error("Analysis Error:", e);
+      setError("Failed to get analysis. Please try again.");
     } finally {
       setIsLoading(false);
     }
