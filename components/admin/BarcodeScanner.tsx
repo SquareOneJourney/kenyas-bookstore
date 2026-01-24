@@ -37,10 +37,20 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
 
         const startScanner = async () => {
             try {
-                // High-end move: Specifically request the back camera (environment) 
-                // to skip the "which camera" dropdown mess.
+                // High-end move: specifically request the back camera (environment) 
+                // BUT with constraints that force the high-quality main sensor (720p+)
+                // This prevents it from picking the low-quality wide-angle "macro" lens.
+                const videoConstraints = {
+                    facingMode: "environment",
+                    width: { min: 640, ideal: 1280, max: 1920 },
+                    height: { min: 480, ideal: 720, max: 1080 },
+                    aspectRatio: 1.777777778, // 16:9
+                    // @ts-ignore - advanced constraint for autofocus
+                    focusMode: "continuous"
+                };
+
                 await html5QrCode.start(
-                    { facingMode: "environment" },
+                    videoConstraints,
                     config,
                     (decodedText) => {
                         // Success Feedback: Pulse the scanner green 
