@@ -71,8 +71,15 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       is_active: book.is_active ?? true,
     }));
 
+    console.log("Attempting to insert books:", dbBooks);
     const { error } = await supabase.from('books').insert(dbBooks);
-    if (error) console.error('Error adding books to DB:', error);
+    if (error) {
+      console.error('Error adding books to DB:', error);
+      console.error('Error details:', error.message, error.details, error.hint);
+      alert(`Database Error: ${error.message} (${error.details || ''})`);
+    } else {
+      console.log("Books added successfully");
+    }
   };
 
   return (

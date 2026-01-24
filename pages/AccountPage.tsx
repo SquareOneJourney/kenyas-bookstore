@@ -20,11 +20,10 @@ const AccountTabs: React.FC<{
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`${
-              activeTab === tab
+            className={`${activeTab === tab
                 ? 'border-forest text-forest'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
           >
             {tab}
           </button>
@@ -36,7 +35,7 @@ const AccountTabs: React.FC<{
 
 const WishlistPanel: React.FC = () => {
   const { wishlist } = useWishlist();
-  
+
   if (wishlist.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg border border-dashed border-gray-300">
@@ -119,17 +118,17 @@ const SettingsPanel: React.FC<{ userEmail?: string; userName?: string }> = ({ us
       <h2 className="text-2xl font-semibold mb-4">Account Settings</h2>
       <div className="bg-white p-6 rounded-lg shadow-sm border space-y-4">
         <form onSubmit={handleUpdateSettings} className="space-y-4">
-          <Input 
-            label="Email Address" 
-            id="email" 
-            type="email" 
-            defaultValue={userEmail || ''} 
+          <Input
+            label="Email Address"
+            id="email"
+            type="email"
+            defaultValue={userEmail || ''}
             disabled
           />
-          <Input 
-            label="Full Name" 
-            id="name" 
-            defaultValue={userName || ''} 
+          <Input
+            label="Full Name"
+            id="name"
+            defaultValue={userName || ''}
           />
           <Button type="submit" disabled={isUpdating}>
             {isUpdating ? 'Updating...' : 'Update Settings'}
@@ -170,9 +169,9 @@ const LoginForm: React.FC<{ onSwitchToSignUp: () => void }> = ({ onSwitchToSignU
     setIsSubmitting(true);
 
     const { error: signInError } = await signIn(email, password);
-    
+
     setIsSubmitting(false);
-    
+
     if (signInError) {
       setError(signInError.message || 'Failed to sign in. Please check your credentials.');
     }
@@ -181,7 +180,7 @@ const LoginForm: React.FC<{ onSwitchToSignUp: () => void }> = ({ onSwitchToSignU
   const handleGoogleSignIn = async () => {
     setError(null);
     const { error: googleError } = await signInWithGoogle();
-    
+
     if (googleError) {
       setError(googleError.message || 'Failed to sign in with Google.');
     }
@@ -191,7 +190,7 @@ const LoginForm: React.FC<{ onSwitchToSignUp: () => void }> = ({ onSwitchToSignU
     <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
       <h1 className="font-serif text-3xl font-bold mb-2 text-center text-deep-blue">Welcome Back</h1>
       <p className="text-center text-gray-600 mb-6">Sign in to your account</p>
-      
+
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
           {error}
@@ -218,9 +217,9 @@ const LoginForm: React.FC<{ onSwitchToSignUp: () => void }> = ({ onSwitchToSignU
           required
           disabled={isSubmitting || loading}
         />
-        <Button 
-          type="submit" 
-          className="w-full" 
+        <Button
+          type="submit"
+          className="w-full"
           disabled={isSubmitting || loading}
         >
           {isSubmitting ? 'Signing in...' : 'Sign In'}
@@ -284,6 +283,7 @@ const SignUpForm: React.FC<{ onSwitchToLogin: () => void }> = ({ onSwitchToLogin
   const { signUp, signInWithGoogle, loading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -306,10 +306,10 @@ const SignUpForm: React.FC<{ onSwitchToLogin: () => void }> = ({ onSwitchToLogin
 
     setIsSubmitting(true);
 
-    const { error: signUpError } = await signUp(email, password);
-    
+    const { error: signUpError } = await signUp(email, password, fullName);
+
     setIsSubmitting(false);
-    
+
     if (signUpError) {
       setError(signUpError.message || 'Failed to create account. Please try again.');
     } else {
@@ -320,7 +320,7 @@ const SignUpForm: React.FC<{ onSwitchToLogin: () => void }> = ({ onSwitchToLogin
   const handleGoogleSignIn = async () => {
     setError(null);
     const { error: googleError } = await signInWithGoogle();
-    
+
     if (googleError) {
       setError(googleError.message || 'Failed to sign up with Google.');
     }
@@ -330,7 +330,7 @@ const SignUpForm: React.FC<{ onSwitchToLogin: () => void }> = ({ onSwitchToLogin
     <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
       <h1 className="font-serif text-3xl font-bold mb-2 text-center text-deep-blue">Create Account</h1>
       <p className="text-center text-gray-600 mb-6">Sign up to get started</p>
-      
+
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
           {error}
@@ -344,6 +344,16 @@ const SignUpForm: React.FC<{ onSwitchToLogin: () => void }> = ({ onSwitchToLogin
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          label="Full Name"
+          id="signup-name"
+          type="text"
+          placeholder="Jane Doe"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          required
+          disabled={isSubmitting || loading}
+        />
         <Input
           label="Email"
           id="signup-email"
@@ -374,9 +384,9 @@ const SignUpForm: React.FC<{ onSwitchToLogin: () => void }> = ({ onSwitchToLogin
           minLength={6}
           disabled={isSubmitting || loading}
         />
-        <Button 
-          type="submit" 
-          className="w-full" 
+        <Button
+          type="submit"
+          className="w-full"
           disabled={isSubmitting || loading}
         >
           {isSubmitting ? 'Creating account...' : 'Sign Up'}

@@ -22,11 +22,11 @@ const AdminAnalysisPage: React.FC = () => {
   const { getBooks } = useBooks();
   const [books, setBooks] = useState<Book[]>([]);
   const [selectedBookId, setSelectedBookId] = useState<string>('');
-  
+
   const [mode, setMode] = useState<AnalysisMode>('library');
   const [newBookQuery, setNewBookQuery] = useState('');
   const [bookFormat, setBookFormat] = useState<'paperback' | 'hardcover'>('paperback');
-  
+
   const [analysis, setAnalysis] = useState<BookAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,34 +54,34 @@ const AdminAnalysisPage: React.FC = () => {
     setMode(newMode);
     resetState();
   };
-  
+
   const handleFindBook = async () => {
     if (!newBookQuery) {
-        setError("Please enter a book title or description.");
-        return;
+      setError("Please enter a book title or description.");
+      return;
     }
     setIsLoading(true);
     resetState();
 
     try {
-        const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
-        const prompt = `You are an expert librarian. Based on the user's query, identify the most likely book they are referring to. Query: "${newBookQuery}". Provide ONLY the book's official title and full author name in a JSON object with keys "title" and "author".`;
-        
-        const response = await ai.models.generateContent({
-          model: 'gemini-1.5-flash',
-          contents: prompt,
-        });
+      const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
+      const prompt = `You are an expert librarian. Based on the user's query, identify the most likely book they are referring to. Query: "${newBookQuery}". Provide ONLY the book's official title and full author name in a JSON object with keys "title" and "author".`;
 
-        const text = response.text.replace(/```json|```/g, '').trim();
-        const foundBook = JSON.parse(text) as IdentifiedBook;
-        setIdentifiedBook(foundBook);
-        setNeedsConfirmation(true);
+      const response = await ai.models.generateContent({
+        model: 'gemini-1.5-flash',
+        contents: prompt,
+      });
+
+      const text = response.text.replace(/```json|```/g, '').trim();
+      const foundBook = JSON.parse(text) as IdentifiedBook;
+      setIdentifiedBook(foundBook);
+      setNeedsConfirmation(true);
 
     } catch (e) {
-        console.error("Error identifying book:", e);
-        setError("Could not identify the book. Please try a more specific query.");
+      console.error("Error identifying book:", e);
+      setError("Could not identify the book. Please try a more specific query.");
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -139,7 +139,7 @@ const AdminAnalysisPage: React.FC = () => {
         model: 'gemini-1.5-flash',
         contents: prompt,
         config: {
-          tools: [{googleSearch: {}}],
+          tools: [{ googleSearch: {} }],
         }
       });
 
@@ -160,7 +160,7 @@ const AdminAnalysisPage: React.FC = () => {
   return (
     <div>
       <h1 className="font-serif text-4xl font-bold text-deep-blue mb-8">AI-Powered Book Analysis</h1>
-      
+
       {/* Mode Toggle */}
       <div className="flex justify-center mb-6">
         <div className="bg-gray-200 p-1 rounded-lg flex space-x-1">
@@ -168,12 +168,12 @@ const AdminAnalysisPage: React.FC = () => {
           <Button variant={mode === 'new' ? 'primary' : 'ghost'} onClick={() => handleModeChange('new')}>Analyze New Book</Button>
         </div>
       </div>
-      
+
       <div className="bg-white p-6 rounded-lg shadow-md">
         {mode === 'library' && (
           <div className="flex flex-col md:flex-row gap-4 items-end mb-6">
             <div className="w-full md:w-2/3">
-              <Select label="Select a Book" id="book-select" value={selectedBookId} onChange={e => {setSelectedBookId(e.target.value); resetState();}} disabled={isLoading || books.length === 0}>
+              <Select label="Select a Book" id="book-select" value={selectedBookId} onChange={e => { setSelectedBookId(e.target.value); resetState(); }} disabled={isLoading || books.length === 0}>
                 {books.map(book => <option key={book.id} value={book.id}>{book.title}</option>)}
               </Select>
             </div>
@@ -187,8 +187,8 @@ const AdminAnalysisPage: React.FC = () => {
           <div className="mb-6 space-y-4">
             <Input label="Find a Book" placeholder="Enter title, author, or description..." value={newBookQuery} onChange={e => setNewBookQuery(e.target.value)} disabled={isLoading} />
             <Select label="Book Format" value={bookFormat} onChange={e => setBookFormat(e.target.value as 'paperback' | 'hardcover')} disabled={isLoading}>
-                <option value="paperback">Paperback</option>
-                <option value="hardcover">Hardcover</option>
+              <option value="paperback">Paperback</option>
+              <option value="hardcover">Hardcover</option>
             </Select>
             <Button onClick={handleFindBook} disabled={isLoading || !newBookQuery}>Find Book</Button>
           </div>
@@ -204,15 +204,15 @@ const AdminAnalysisPage: React.FC = () => {
         )}
 
         {needsConfirmation && identifiedBook && (
-            <div className="bg-accent/20 p-4 rounded-lg text-center">
-                <p className="font-semibold">Is this the correct book?</p>
-                <p className="text-lg font-serif">{identifiedBook.title}</p>
-                <p className="text-sm text-gray-600">by {identifiedBook.author}</p>
-                <div className="mt-4 space-x-2">
-                    <Button onClick={handleAnalyze}>Yes, Analyze It</Button>
-                    <Button variant="outline" onClick={() => setNeedsConfirmation(false)}>No, Search Again</Button>
-                </div>
+          <div className="bg-accent/20 p-4 rounded-lg text-center">
+            <p className="font-semibold">Is this the correct book?</p>
+            <p className="text-lg font-serif">{identifiedBook.title}</p>
+            <p className="text-sm text-gray-600">by {identifiedBook.author}</p>
+            <div className="mt-4 space-x-2">
+              <Button onClick={handleAnalyze}>Yes, Analyze It</Button>
+              <Button variant="outline" onClick={() => setNeedsConfirmation(false)}>No, Search Again</Button>
             </div>
+          </div>
         )}
 
 
@@ -222,7 +222,7 @@ const AdminAnalysisPage: React.FC = () => {
               <h2 className="font-serif text-2xl font-bold text-deep-blue">{currentBookForDisplay.title}</h2>
               <p className="text-lg text-gray-600">by {currentBookForDisplay.author}</p>
             </div>
-            
+
             <div className="border-t pt-4">
               <h3 className="text-xl font-semibold text-deep-blue mb-2">Suggested Price</h3>
               <p className="text-3xl font-bold text-forest">${analysis.suggested_price.toFixed(2)}</p>
