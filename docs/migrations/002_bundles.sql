@@ -71,3 +71,4 @@ COMMENT ON COLUMN bundles.discount_percentage IS 'Discount percentage applied to
 
 
 
+

@@ -29,7 +29,7 @@ export function getStripeServerClient(): Stripe | null {
   if (!stripeClient) {
     try {
       stripeClient = new Stripe(secretKey, {
-        apiVersion: '2024-11-20.acacia',
+        apiVersion: '2023-10-16',
       });
     } catch (error) {
       console.error('Failed to create Stripe server client:', error);
