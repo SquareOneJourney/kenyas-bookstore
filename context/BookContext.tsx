@@ -66,8 +66,8 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       page_count: book.page_count ?? null,
       format: book.format ?? null,
       language: book.language ?? null,
-      availability_message: book.availability_message ?? null,
-      estimated_arrival_date: book.estimated_arrival_date ?? null,
+      // availability_message: book.availability_message ?? null, // Column missing in DB
+      // estimated_arrival_date: book.estimated_arrival_date ?? null, // Column missing in DB
       is_active: book.is_active ?? true,
     }));
 
