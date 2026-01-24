@@ -67,9 +67,8 @@ export const BookService = {
           page_count: info.pageCount,
           publisher: info.publisher,
           publication_date: info.publishedDate,
-          coverUrl: info.imageLinks?.thumbnail?.replace('http:', 'https:') || `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-L.jpg`,
+          cover_url: info.imageLinks?.thumbnail?.replace('http:', 'https:') || `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-L.jpg`,
           genre: info.categories ? info.categories[0] : 'General',
-          isbn: cleanIsbn,
           isbn13: cleanIsbn.length === 13 ? cleanIsbn : null,
           isbn10: cleanIsbn.length === 10 ? cleanIsbn : null,
         } as any;
