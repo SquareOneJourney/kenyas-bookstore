@@ -110,8 +110,9 @@ export const BookService = {
         3. "market_price_new": An estimated USD price for a New copy.
       `;
 
+      console.log("BOOK_SERVICE_VERSION: 1.3_STRICT_FALLBACK");
       const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-1.5-flash-latest',
         contents: [
           {
             role: 'user',
@@ -126,14 +127,18 @@ export const BookService = {
 
       return {
         ...partialBook,
-        description: partialBook.description ? partialBook.description.substring(0, 300) + "..." : aiData.short_description,
+        description: partialBook.description || aiData.short_description || '',
         tags: aiData.tags || [],
         price: aiData.market_price_new || 15.00,
       } as any;
 
     } catch (error) {
-      console.error("AI Enrichment Error:", error);
-      return partialBook;
+      console.warn("AI Enrichment failed, using basic data fallback:", error);
+      return {
+        ...partialBook,
+        price: partialBook.price || 15.00,
+        tags: []
+      } as any;
     }
   }
 };

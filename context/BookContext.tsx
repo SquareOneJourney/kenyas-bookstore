@@ -58,8 +58,8 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       author: book.author ?? null,
       description: book.description ?? null,
       cover_url: book.cover_url ?? null,
-      isbn: book.isbn13 || book.isbn10 || null, // Map primarily to 'isbn' column
-      price: book.list_price_cents ? book.list_price_cents / 100 : 0, // DB has 'price' (numeric), App has cents
+      isbn: book.isbn || book.isbn13 || book.isbn10 || null, // Map primarily to 'isbn' column
+      price: book.price || (book.list_price_cents ? book.list_price_cents / 100 : 15.00), // Handle both dollar and cent formats
       stock: book.stock ?? 0,
       genre: book.genre ?? null,
       condition: book.condition ?? 'New', // DB has 'condition'
