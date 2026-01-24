@@ -218,6 +218,26 @@ body {
   }
 }
 
+@keyframes scan-y {
+
+  0%,
+  100% {
+    top: 0;
+  }
+
+  50% {
+    top: 100%;
+  }
+}
+
+.animate-scan-y {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  animation: scan-y 3s ease-in-out infinite;
+}
+
 .scanner-laser-line {
   position: absolute;
   left: 0;
@@ -277,6 +297,17 @@ body {
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(2px);
   z-index: 10;
+}
+
+/* Force video to cover the container */
+#html5-qrcode-video video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+#html5-qrcode-video canvas {
+  display: none !important;
 }
 
 .scanner-cutout {
@@ -369,11 +400,11 @@ body {
 
 /* Glassmorphism details */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
 }
 
 .shimmer {
