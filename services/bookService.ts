@@ -41,7 +41,7 @@ export const BookService = {
 
       console.log(`Fetching from Google Books. ISBN: ${cleanIsbn}, Key Available: ${!!apiKey}`);
 
-      const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanIsbn}&key=${apiKey}`);
+      const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanIsbn}`);
 
       if (!response.ok) {
         console.error("Google Books API Error Status:", response.status);
