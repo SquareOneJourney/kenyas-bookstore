@@ -57,29 +57,24 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       author: book.author ?? null,
       description: book.description ?? null,
       cover_url: book.cover_url ?? null,
-      isbn10: book.isbn10 ?? null,
-      isbn13: book.isbn13 ?? null,
-      list_price_cents: book.list_price_cents ?? null,
-      // currency: book.currency ?? null,
-      // publisher: book.publisher ?? null,
-      // publication_date: book.publication_date ?? null,
-      // page_count: book.page_count ?? null,
-      // format: book.format ?? null,
-      // language: book.language ?? null,
-      // availability_message: book.availability_message ?? null,
-      // estimated_arrival_date: book.estimated_arrival_date ?? null,
-      // stock: book.stock ?? 0,
-      // genre: book.genre ?? null,
-      // location: book.location ?? null,
-      // tags: book.tags ?? null,
-      // supply_source: book.supply_source ?? 'local',
-      // cost_basis: book.cost_basis ?? null,
-      // ingram_stock_level: book.ingram_stock_level ?? null,
-      // last_stock_sync: book.last_stock_sync ?? null,
-      is_active: book.is_active ?? true,
+      isbn: book.isbn13 || book.isbn10 || null, // Map primarily to 'isbn' column
+      price: book.list_price_cents ? book.list_price_cents / 100 : 0, // DB has 'price' (numeric), App has cents
+      stock: book.stock ?? 0,
+      genre: book.genre ?? null,
+      condition: book.condition ?? 'New', // DB has 'condition'
+      location: book.location ?? null,
+      tags: book.tags ?? null,
+      supply_source: book.supply_source ?? 'local',
+      cost_basis: book.cost_basis ?? null,
+      ingram_stock_level: book.ingram_stock_level ?? null,
+      last_stock_sync: book.last_stock_sync ?? null,
+      availability_message: book.availability_message ?? null,
+      estimated_arrival_date: book.estimated_arrival_date ?? null,
+      // Removed columns that don't exist in DB:
+      // currency, publisher, publication_date, page_count, format, language, is_active
     }));
 
-    console.log("Attempting to insert books:", dbBooks);
+    console.log("Attempting to insert books with CORRECTED Schema:", dbBooks);
     const { error } = await supabase.from('books').insert(dbBooks);
     if (error) {
       console.error('Error adding books to DB:', error);
