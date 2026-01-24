@@ -110,9 +110,9 @@ export const BookService = {
         3. "market_price_new": An estimated USD price for a New copy.
       `;
 
-      console.log("BOOK_SERVICE_VERSION: 1.3_STRICT_FALLBACK");
+      console.log("BOOK_SERVICE_VERSION: 1.4_STABLE_STRING");
       const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash-latest',
+        model: 'gemini-1.5-flash',
         contents: [
           {
             role: 'user',
