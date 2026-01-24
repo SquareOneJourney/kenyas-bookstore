@@ -48,57 +48,29 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
 
         const startScanner = async () => {
             try {
-                // progressive degradation strategy
-                // 1. Try High Res (Best for focusing)
-                // 2. Try Medium Res (Standard)
-                // 3. Try Basic (Just give me a video feed)
+                // Simplified camera logic for maximum compatibility
+                // We avoid strict resolution constraints which cause "Access Denied" on some devices
+                const cameraConfig = { facingMode: "environment" };
 
-                const startWithConstraints = async (constraints: any) => {
-                    try {
-                        console.log("Attempting camera with constraints:", JSON.stringify(constraints));
-                        await html5QrCode.start(constraints, config, onScan, (err) => { if (onScanFailure) onScanFailure(err) });
-                        setIsScannerStarted(true);
-                        setError(null);
-                        return true;
-                    } catch (err) {
-                        console.warn("Camera start failed for constraints:", constraints, err);
-                        return false;
+                await html5QrCode.start(
+                    cameraConfig,
+                    config,
+                    onScan,
+                    (errorMessage) => {
+                        // ignore frame parse errors
                     }
-                };
+                );
 
-                // Attempt 1: High Quality (720p minimum)
-                const highRes = {
-                    facingMode: "environment",
-                    width: { min: 640, ideal: 1280 },
-                    height: { min: 480, ideal: 720 },
-                    aspectRatio: { ideal: 1.777 },
-                    // @ts-ignore
-                    focusMode: "continuous"
-                };
-
-                // Attempt 2: Loose (Just ask for environment)
-                const mediumRes = { facingMode: "environment" };
-
-                // Attempt 3: Desperate (Anything works)
-                const basic = { facingMode: "user" };
-
-                if (await startWithConstraints(highRes)) return;
-                console.log("High res failed, trying medium constraint...");
-
-                if (await startWithConstraints(mediumRes)) return;
-                console.log("Medium res failed, trying basic constraint...");
-
-                if (await startWithConstraints(basic)) return;
-
-                throw new Error("Could not start any camera.");
-
-            } catch (err: any) {
-                console.error("All camera attempts failed:", err);
-                setError("Could not access camera. Please check permissions.");
+                setIsScannerStarted(true);
+                setError(null);
+            } catch (err) {
+                console.error("Camera start failed:", err);
+                setError("Camera access denied. Please allow permissions.");
             }
         };
 
-        startScanner();
+        // Small delay to ensure DOM is ready
+        setTimeout(startScanner, 100);
 
         return () => {
             if (html5QrCodeRef.current) {
