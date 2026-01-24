@@ -35,61 +35,66 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
             ]
         };
 
+        const onScan = (decodedText: string) => {
+            const cutout = document.querySelector('.scanner-cutout');
+            if (cutout) {
+                cutout.classList.add('bg-green-500/20');
+                setTimeout(() => cutout.classList.remove('bg-green-500/20'), 300);
+            }
+            html5QrCode.pause(true);
+            setIsScannerStarted(false);
+            onScanSuccess(decodedText);
+        };
+
         const startScanner = async () => {
             try {
-                // High-end move: specifically request the back camera (environment) 
-                // BUT with constraints that force the high-quality main sensor (720p+)
-                // This prevents it from picking the low-quality wide-angle "macro" lens.
-                const videoConstraints = {
+                // progressive degradation strategy
+                // 1. Try High Res (Best for focusing)
+                // 2. Try Medium Res (Standard)
+                // 3. Try Basic (Just give me a video feed)
+
+                const startWithConstraints = async (constraints: any) => {
+                    try {
+                        console.log("Attempting camera with constraints:", JSON.stringify(constraints));
+                        await html5QrCode.start(constraints, config, onScan, (err) => { if (onScanFailure) onScanFailure(err) });
+                        setIsScannerStarted(true);
+                        setError(null);
+                        return true;
+                    } catch (err) {
+                        console.warn("Camera start failed for constraints:", constraints, err);
+                        return false;
+                    }
+                };
+
+                // Attempt 1: High Quality (720p minimum)
+                const highRes = {
                     facingMode: "environment",
-                    width: { min: 640, ideal: 1280, max: 1920 },
-                    height: { min: 480, ideal: 720, max: 1080 },
-                    aspectRatio: 1.777777778, // 16:9
-                    // @ts-ignore - advanced constraint for autofocus
+                    width: { min: 640, ideal: 1280 },
+                    height: { min: 480, ideal: 720 },
+                    aspectRatio: { ideal: 1.777 },
+                    // @ts-ignore
                     focusMode: "continuous"
                 };
 
-                await html5QrCode.start(
-                    videoConstraints,
-                    config,
-                    (decodedText) => {
-                        // Success Feedback: Pulse the scanner green 
-                        const cutout = document.querySelector('.scanner-cutout');
-                        if (cutout) {
-                            cutout.classList.add('bg-green-500/20');
-                            setTimeout(() => cutout.classList.remove('bg-green-500/20'), 300);
-                        }
+                // Attempt 2: Loose (Just ask for environment)
+                const mediumRes = { facingMode: "environment" };
 
-                        // Pause on success to prevent infinite scanning
-                        html5QrCode.pause(true);
-                        setIsScannerStarted(false); // Update local state to show "scanned" overlay
+                // Attempt 3: Desperate (Anything works)
+                const basic = { facingMode: "user" };
 
-                        onScanSuccess(decodedText);
-                    },
-                    (errorMessage) => {
-                        if (onScanFailure) onScanFailure(errorMessage);
-                    }
-                );
-                setIsScannerStarted(true);
+                if (await startWithConstraints(highRes)) return;
+                console.log("High res failed, trying medium constraint...");
+
+                if (await startWithConstraints(mediumRes)) return;
+                console.log("Medium res failed, trying basic constraint...");
+
+                if (await startWithConstraints(basic)) return;
+
+                throw new Error("Could not start any camera.");
+
             } catch (err: any) {
-                console.warn("Failed to start with environment camera, falling back to default.", err);
-                // Fallback: Just use whatever camera is available
-                try {
-                    await html5QrCode.start(
-                        { facingMode: "user" }, // Try front if back fails
-                        config,
-                        (decodedText) => {
-                            html5QrCode.pause(true);
-                            setIsScannerStarted(false);
-                            onScanSuccess(decodedText);
-                        },
-                        onScanFailure
-                    );
-                    setIsScannerStarted(true);
-                } catch (fallbackErr: any) {
-                    setError("Could not access camera. Please check permissions.");
-                    console.error("Camera Init Error:", fallbackErr);
-                }
+                console.error("All camera attempts failed:", err);
+                setError("Could not access camera. Please check permissions.");
             }
         };
 
