@@ -67,10 +67,13 @@ const AdminAnalysisPage: React.FC = () => {
       const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
       const prompt = `You are an expert librarian. Based on the user's query, identify the most likely book they are referring to. Query: "${newBookQuery}". Provide ONLY the book's official title and full author name in a JSON object with keys "title" and "author".`;
 
-      const response = await ai.models.generateContent({
+      // @ts-ignore
+      const model = ai.getGenerativeModel({
         model: 'gemini-1.5-flash',
-        contents: prompt,
+        generationConfig: { responseMimeType: 'application/json' }
       });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
 
       const text = response.text.replace(/```json|```/g, '').trim();
       const foundBook = JSON.parse(text) as IdentifiedBook;
@@ -135,15 +138,15 @@ const AdminAnalysisPage: React.FC = () => {
         - "marketing_angles": An array of 3-4 creative marketing angles or hooks.
       `;
 
-      const response = await ai.models.generateContent({
+      // @ts-ignore
+      const model = ai.getGenerativeModel({
         model: 'gemini-1.5-flash',
-        contents: prompt,
-        config: {
-          tools: [{ googleSearch: {} }],
-        }
+        generationConfig: { responseMimeType: 'application/json' }
       });
 
-      const text = response.text.replace(/```json|```/g, '').trim();
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
       const parsedAnalysis = JSON.parse(text) as BookAnalysis;
       setAnalysis(parsedAnalysis);
 
