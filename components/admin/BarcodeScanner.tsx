@@ -49,6 +49,11 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
                             cutout.classList.add('bg-green-500/20');
                             setTimeout(() => cutout.classList.remove('bg-green-500/20'), 300);
                         }
+
+                        // Pause on success to prevent infinite scanning
+                        html5QrCode.pause(true);
+                        setIsScannerStarted(false); // Update local state to show "scanned" overlay
+
                         onScanSuccess(decodedText);
                     },
                     (errorMessage) => {
@@ -63,7 +68,11 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
                     await html5QrCode.start(
                         { facingMode: "user" }, // Try front if back fails
                         config,
-                        onScanSuccess,
+                        (decodedText) => {
+                            html5QrCode.pause(true);
+                            setIsScannerStarted(false);
+                            onScanSuccess(decodedText);
+                        },
                         onScanFailure
                     );
                     setIsScannerStarted(true);
@@ -77,10 +86,19 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
         startScanner();
 
         return () => {
-            if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
-                html5QrCodeRef.current.stop().then(() => {
-                    html5QrCodeRef.current?.clear();
-                }).catch(err => console.error("Scanner stop error", err));
+            if (html5QrCodeRef.current) {
+                try {
+                    if (html5QrCodeRef.current.isScanning) {
+                        html5QrCodeRef.current.stop().then(() => {
+                            html5QrCodeRef.current?.clear();
+                        }).catch(err => console.error("Scanner stop error", err));
+                    } else {
+                        // If paused or not scanning, just clear
+                        html5QrCodeRef.current.clear();
+                    }
+                } catch (e) {
+                    console.error("Cleanup error", e);
+                }
             }
         };
     }, [onScanSuccess, onScanFailure]);
@@ -91,7 +109,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
             <div id={scannerId} className="w-full h-full object-cover"></div>
 
             {/* Premium UI Overlay */}
-            {isScannerStarted && (
+            {isScannerStarted ? (
                 <>
                     <div className="scanner-overlay-mask"></div>
                     <div className="scanner-cutout">
@@ -112,6 +130,16 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
                         </p>
                     </div>
                 </>
+            ) : !error && (
+                // Success State Overlay (When paused)
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-40 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-forest text-cream p-4 rounded-full mb-4 shadow-lg shadow-forest/50">
+                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <p className="text-white font-bold text-lg tracking-widest uppercase">Book Details Found</p>
+                </div>
             )}
 
             {error && (
@@ -123,7 +151,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
                 </div>
             )}
 
-            {!isScannerStarted && !error && (
+            {!isScannerStarted && !error && !html5QrCodeRef.current && (
                 <div className="absolute inset-0 flex items-center justify-center z-30">
                     <div className="animate-spin h-8 w-8 border-2 border-forest border-t-transparent rounded-full"></div>
                 </div>

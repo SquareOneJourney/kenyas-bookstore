@@ -93,6 +93,8 @@ const AdminLibraryPage: React.FC = () => {
         processIsbn(decodedText);
     };
 
+    const [scanSessionKey, setScanSessionKey] = useState(0);
+
     const handleSaveScannedBook = () => {
         if (!scannedBook) return;
 
@@ -122,16 +124,18 @@ const AdminLibraryPage: React.FC = () => {
         addBooks([newBook]);
         setBooks(prev => [newBook, ...prev]);
 
+        // Reset Scanner properly
         setScannedBook(null);
         setScanIsbn('');
         setFormLocation('');
         setFormStock('1');
         setIngramStatus(null);
+        setScanSessionKey(prev => prev + 1); // Force re-mount of scanner
         if (scanInputRef.current) scanInputRef.current.focus();
     };
 
     return (
-        <div className="pb-24 pt-4 md:pt-0">
+        <div className="pb-24 pt-4 md:pt-0 px-4 md:px-0 max-w-full overflow-x-hidden">
             {/* Desktop Header */}
             <div className="hidden md:flex justify-between items-center mb-10">
                 <div>
@@ -153,7 +157,7 @@ const AdminLibraryPage: React.FC = () => {
             </div>
 
             {/* Mobile Header (Minimal) */}
-            <div className="md:hidden mb-6 flex justify-between items-center px-2">
+            <div className="md:hidden mb-6 flex justify-between items-center">
                 <h1 className="font-serif text-3xl font-bold text-deep-blue">Library</h1>
                 <div className="text-xs font-bold text-forest bg-forest/10 px-3 py-1 rounded-full uppercase tracking-widest">
                     Admin
@@ -161,7 +165,7 @@ const AdminLibraryPage: React.FC = () => {
             </div>
 
             {mode === 'scan' && (
-                <div className="mb-10 max-w-4xl mx-auto">
+                <div className="mb-10 w-full max-w-4xl mx-auto">
                     <div className="glass-panel p-6 md:p-10 rounded-[2rem] relative overflow-hidden">
                         {/* Decorative Background Element */}
                         <div className="absolute -top-20 -right-20 w-64 h-64 bg-forest/5 rounded-full blur-3xl -z-10"></div>
@@ -184,6 +188,7 @@ const AdminLibraryPage: React.FC = () => {
                         {scanMethod === 'camera' ? (
                             <div className="mb-10 max-w-md mx-auto">
                                 <BarcodeScanner
+                                    key={scanSessionKey} // Reset scanner on new session
                                     onScanSuccess={handleCameraScan}
                                     onScanFailure={(err) => console.log(err)}
                                 />
