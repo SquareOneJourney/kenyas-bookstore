@@ -7,6 +7,7 @@ import { getSupabaseClient } from '../lib/supabaseClient';
 interface BookContextType {
   books: Book[];
   addBooks: (newBooks: Book[]) => void;
+  updateBook: (id: string, updates: Partial<Book>) => Promise<void>;
 }
 
 export const BookContext = createContext<BookContextType | undefined>(undefined);
@@ -86,8 +87,55 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updateBook = async (id: string, updates: Partial<Book>) => {
+    // 1. Optimistic Update
+    setBooks(prev => prev.map(book => book.id === id ? { ...book, ...updates } : book));
+
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    // 2. Map to DB Schema (similar to insert but partial)
+    const dbUpdates: any = {};
+    if (updates.title !== undefined) dbUpdates.title = updates.title;
+    if (updates.author !== undefined) dbUpdates.author = updates.author;
+    if (updates.description !== undefined) dbUpdates.description = updates.description;
+    if (updates.cover_url !== undefined) dbUpdates.cover_url = updates.cover_url;
+    if (updates.stock !== undefined) dbUpdates.stock = updates.stock;
+    if (updates.genre !== undefined) dbUpdates.genre = updates.genre;
+    if (updates.condition !== undefined) dbUpdates.condition = updates.condition;
+    if (updates.location !== undefined) dbUpdates.location = updates.location;
+    if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
+    if (updates.supply_source !== undefined) dbUpdates.supply_source = updates.supply_source;
+    if (updates.cost_basis !== undefined) dbUpdates.cost_basis = updates.cost_basis;
+
+    // Handle Price mapping
+    if (updates.price !== undefined) {
+      dbUpdates.price = updates.price;
+    } else if (updates.list_price_cents !== undefined) {
+      dbUpdates.price = updates.list_price_cents / 100;
+    }
+
+    // Handle ISBN mapping
+    if (updates.isbn13 || updates.isbn10 || updates.isbn) {
+      dbUpdates.isbn = updates.isbn13 || updates.isbn10 || updates.isbn;
+    }
+
+    console.log("Updating book:", id, dbUpdates);
+
+    const { error } = await supabase
+      .from('books')
+      .update(dbUpdates)
+      .eq('id', id);
+
+    if (error) {
+      console.error("Error updating book:", error);
+      alert("Failed to save changes: " + error.message);
+      // Rollback? (TODO)
+    }
+  };
+
   return (
-    <BookContext.Provider value={{ books, addBooks }}>
+    <BookContext.Provider value={{ books, addBooks, updateBook }}>
       {children}
     </BookContext.Provider>
   );

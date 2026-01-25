@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useBooks } from '../../hooks/useBooks';
 import { Book, BookCondition, SupplySource } from '../../types';
@@ -8,12 +7,13 @@ import Select from '../../components/ui/Select';
 import { BookService } from '../../services/bookService';
 import { IngramService } from '../../services/ingramService';
 import { formatMoneyFromCents } from '../../lib/money';
-
 import BarcodeScanner from '../../components/admin/BarcodeScanner';
+import EditBookModal from '../../components/admin/EditBookModal';
 import { BOOKS as MOCK_BOOKS } from '../../lib/mockData';
 
 const AdminLibraryPage: React.FC = () => {
-    const { getBooks, addBooks } = useBooks();
+    // 1. Add updateBook to hook destructuring
+    const { getBooks, addBooks, updateBook } = useBooks();
     const [books, setBooks] = useState<Book[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<'library' | 'scan' | 'insights'>('library');
@@ -34,9 +34,12 @@ const AdminLibraryPage: React.FC = () => {
     const [formSource, setFormSource] = useState<SupplySource>('local');
     const [ingramStatus, setIngramStatus] = useState<any>(null);
 
+    // 2. New State for Editing
+    const [editingBook, setEditingBook] = useState<Book | null>(null);
+
     useEffect(() => {
         getBooks().then(setBooks);
-    }, [getBooks]);
+    }, [getBooks, activeTab]); // Refresh when tab changes
 
     useEffect(() => {
         if (activeTab === 'scan' && scanInputRef.current && scanMethod === 'manual') {
@@ -111,6 +114,16 @@ const AdminLibraryPage: React.FC = () => {
         setScanSessionKey(prev => prev + 1);
     };
 
+    // 3. Handle Updates
+    const handleUpdateBook = async (id: string, updates: Partial<Book>) => {
+        if (updateBook) {
+            await updateBook(id, updates);
+            setBooks(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
+        } else {
+            console.error("updateBook not available in hook");
+        }
+    };
+
     const filteredBooks = books.filter(b =>
         b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         b.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -162,6 +175,16 @@ const AdminLibraryPage: React.FC = () => {
 
     return (
         <div className="pb-32 pt-4 md:pt-0 px-4 md:px-0 max-w-full overflow-x-hidden">
+
+            {/* 4. Edit Modal */}
+            {editingBook && (
+                <EditBookModal
+                    book={editingBook}
+                    onClose={() => setEditingBook(null)}
+                    onSave={handleUpdateBook}
+                />
+            )}
+
             {/* Desktop Header */}
             <div className="hidden md:flex justify-between items-center mb-10">
                 <div>
@@ -317,7 +340,8 @@ const AdminLibraryPage: React.FC = () => {
             {activeTab === 'library' && (
                 <div className="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 md:space-y-0">
                     {filteredBooks.map((book) => (
-                        <div key={book.id} className="admin-card group">
+                        // 5. Add Click Handler to Card
+                        <   div key={book.id} className="admin-card group cursor-pointer" onClick={() => setEditingBook(book)}>
                             <div className="flex md:flex-col h-full">
                                 <div className="w-24 md:w-full aspect-[2/3] md:aspect-[3/4] relative overflow-hidden flex-shrink-0 bg-gray-100">
                                     <img src={book.cover_url || '/placeholder-book.png'} alt={book.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
@@ -325,6 +349,10 @@ const AdminLibraryPage: React.FC = () => {
                                         <span className={`status-badge border ${book.supply_source === 'ingram' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
                                             {book.supply_source || 'local'}
                                         </span>
+                                    </div>
+                                    {/* Hover Overlay */}
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <span className="bg-white text-forest px-4 py-2 rounded-full font-bold text-xs shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">EDIT BOOK</span>
                                     </div>
                                 </div>
                                 <div className="flex-grow p-4 md:p-5 flex flex-col justify-between">
