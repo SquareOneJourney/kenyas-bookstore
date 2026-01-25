@@ -65,13 +65,14 @@ const AdminAnalysisPage: React.FC = () => {
 
     try {
       const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
-      // @ts-ignore
-      const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
       const prompt = `Identify this book: "${newBookQuery}". Return JSON: {"title": "string", "author": "string"}`;
 
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
-      const foundBook = JSON.parse(text.replace(/```json|```/g, '').trim()) as IdentifiedBook;
+      const response = await ai.models.generateContent({
+        model: 'gemini-1.5-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+      });
+
+      const foundBook = JSON.parse(response.text.replace(/```json|```/g, '').trim()) as IdentifiedBook;
       setIdentifiedBook(foundBook);
       setNeedsConfirmation(true);
 
@@ -114,8 +115,6 @@ const AdminAnalysisPage: React.FC = () => {
 
     try {
       const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
-      // @ts-ignore
-      const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const prompt = `
         Analyze this book for "Kenya's Bookstore":
@@ -130,9 +129,12 @@ const AdminAnalysisPage: React.FC = () => {
         "marketing_angles": [stringArray]
       `;
 
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
-      const parsedAnalysis = JSON.parse(text.replace(/```json|```/g, '').trim()) as BookAnalysis;
+      const response = await ai.models.generateContent({
+        model: 'gemini-1.5-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+      });
+
+      const parsedAnalysis = JSON.parse(response.text.replace(/```json|```/g, '').trim()) as BookAnalysis;
       setAnalysis(parsedAnalysis);
 
     } catch (e) {

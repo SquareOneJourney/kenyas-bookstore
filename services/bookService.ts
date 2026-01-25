@@ -97,9 +97,6 @@ export const BookService = {
       if (!apiKey) return partialBook;
 
       const ai = new GoogleGenAI({ apiKey });
-      // @ts-ignore
-      const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-
       const prompt = `
         I have a book: "${partialBook.title}" by "${partialBook.author}".
         Return a JSON object with: 
@@ -108,9 +105,12 @@ export const BookService = {
         "price": Estimated USD price.
       `;
 
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
-      const data = JSON.parse(text.replace(/```json|```/g, '').trim());
+      const response = await ai.models.generateContent({
+        model: 'gemini-1.5-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+      });
+
+      const data = JSON.parse(response.text.replace(/```json|```/g, '').trim());
 
       return {
         ...partialBook,
