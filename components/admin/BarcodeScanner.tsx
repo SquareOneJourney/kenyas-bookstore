@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface BarcodeScannerProps {
     onScanSuccess: (decodedText: string) => void;
@@ -21,16 +20,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
 
     // Initialize Gemini Helper
     const scanWithGemini = async (imageFile: File): Promise<string | null> => {
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-        if (!apiKey) {
-            console.warn("No Gemini API key found");
-            return null;
-        }
-
         try {
-            const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
             // Convert file to base64
             const base64Data = await new Promise<string>((resolve, reject) => {
                 const reader = new FileReader();
@@ -44,28 +34,23 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
                 reader.onerror = reject;
             });
 
-            const prompt = "Locate the barcode on this book cover. Read the ISBN-13 number (starts with 978 or 979) or the ISBN-10 number. Return ONLY the digits of the number, nothing else. If there are dashes, remove them.";
+            // Call our own serverless API
+            // This allows us to use the secure GEMINI_API_KEY on the server
+            const response = await fetch('/api/ai/scan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ image: base64Data }),
+            });
 
-            const result = await model.generateContent([
-                prompt,
-                {
-                    inlineData: {
-                        data: base64Data,
-                        mimeType: "image/jpeg"
-                    }
-                }
-            ]);
+            if (!response.ok) return null;
 
-            const text = result.response.text().trim();
-            const cleaned = text.replace(/[^0-9X]/gi, '');
-
-            if (cleaned.length >= 10) {
-                return cleaned;
-            }
-            return null;
+            const data = await response.json();
+            return data.code || null;
 
         } catch (err) {
-            console.error("Gemini Scan Error:", err);
+            console.error("Gemini API Scan Error:", err);
             return null;
         }
     };
@@ -135,7 +120,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
                     videoConstraints: {
                         facingMode: "environment", // Request back camera
                         focusMode: "continuous"
-                    }
+                    } as any // Cast to any to allow focusMode
                 },
                 () => { }, // Ignore auto-scan results (we snap manually)
                 () => { }
@@ -216,7 +201,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
                     console.log("Local scan failed, trying AI fallback...");
                 }
 
-                // 4. Try Gemini AI Fallback
+                // 4. Try Gemini AI Fallback (Via Server API)
                 setProcessingMethod('ai');
                 const aiResult = await scanWithGemini(file);
 
