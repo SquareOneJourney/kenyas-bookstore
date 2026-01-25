@@ -19,11 +19,12 @@ export default async function handler(
     }
 
     // Server-side environment access (Secure)
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+
+    // Debug log (Safe)
     console.log(`Debug - API Key Status: ${apiKey ? 'Present' : 'Missing'}, Length: ${apiKey?.length || 0}`);
 
     if (!apiKey) {
-        console.error("Critical Error: GEMINI_API_KEY is undefined in process.env");
         return res.status(500).json({ error: 'Server configuration error: No Gemini API Key' });
     }
 
@@ -38,9 +39,9 @@ export default async function handler(
 
         const prompt = "Locate the barcode on this book cover. Read the ISBN-13 number (starts with 978 or 979) or the ISBN-10 number. Return ONLY the digits of the number, nothing else. If there are dashes, remove them.";
 
-        // Use 'gemini-1.5-flash-latest' which is generally more stable across SDK versions
+        // Use gemini-2.0-flash as confirmed working in your other project
         const result = await ai.models.generateContent({
-            model: 'gemini-1.5-flash-latest',
+            model: 'gemini-2.0-flash',
             contents: [
                 {
                     role: 'user',
