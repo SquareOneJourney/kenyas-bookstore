@@ -20,7 +20,10 @@ export default async function handler(
 
     // Server-side environment access (Secure)
     const apiKey = process.env.GEMINI_API_KEY;
+    console.log(`Debug - API Key Status: ${apiKey ? 'Present' : 'Missing'}, Length: ${apiKey?.length || 0}`);
+
     if (!apiKey) {
+        console.error("Critical Error: GEMINI_API_KEY is undefined in process.env");
         return res.status(500).json({ error: 'Server configuration error: No Gemini API Key' });
     }
 
