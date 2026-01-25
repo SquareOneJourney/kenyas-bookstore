@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
+import { GoogleGenerativeAI } from '@google/genai';
 
 interface BarcodeScannerProps {
     onScanSuccess: (decodedText: string) => void;
@@ -11,19 +12,69 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
     const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
     const [selectedCameraId, setSelectedCameraId] = useState<string>('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [processingMethod, setProcessingMethod] = useState<'local' | 'ai' | null>(null);
     const [scanResult, setScanResult] = useState<string | null>(null);
     const [error, setError] = useState<string>('');
 
     const regionId = "html5qr-code-capture-region";
     const scannerRef = useRef<Html5Qrcode | null>(null);
-    const videoRef = useRef<HTMLVideoElement | null>(null);
 
-    // Get available cameras
+    // Initialize Gemini Helper
+    const scanWithGemini = async (imageFile: File): Promise<string | null> => {
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+        if (!apiKey) {
+            console.warn("No Gemini API key found");
+            return null;
+        }
+
+        try {
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+            // Convert file to base64
+            const base64Data = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(imageFile);
+                reader.onload = () => {
+                    const result = reader.result as string;
+                    // Remove data url prefix
+                    const base64 = result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+            });
+
+            const prompt = "Locate the barcode on this book cover. Read the ISBN-13 number (starts with 978 or 979) or the ISBN-10 number. Return ONLY the digits of the number, nothing else. If there are dashes, remove them.";
+
+            const result = await model.generateContent([
+                prompt,
+                {
+                    inlineData: {
+                        data: base64Data,
+                        mimeType: "image/jpeg"
+                    }
+                }
+            ]);
+
+            const text = result.response.text().trim();
+            const cleaned = text.replace(/[^0-9X]/gi, '');
+
+            if (cleaned.length >= 10) {
+                return cleaned;
+            }
+            return null;
+
+        } catch (err) {
+            console.error("Gemini Scan Error:", err);
+            return null;
+        }
+    };
+
+    // Get cameras on mount
     useEffect(() => {
         Html5Qrcode.getCameras().then(devices => {
             if (devices && devices.length) {
-                // Fix: map the Html5Qrcode result correctly
-                // The library returns objects with { id, label }
+                // Fix types for devices
                 const formattedDevices = devices.map(d => ({
                     deviceId: d.id,
                     label: d.label
@@ -31,14 +82,13 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
 
                 setCameras(formattedDevices);
 
-                // Prioritize back camera ("environment")
+                // Prioritize back camera
                 const backCamera = devices.find(device =>
                     device.label.toLowerCase().includes('back') ||
                     device.label.toLowerCase().includes('environment') ||
                     device.label.toLowerCase().includes('rear')
                 );
 
-                // Set default to back camera if found, else first available
                 setSelectedCameraId(backCamera ? backCamera.id : devices[0].id);
             } else {
                 setError('No cameras found');
@@ -56,11 +106,11 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
         };
     }, []);
 
-    // Start the camera stream (Viewfinder only, no continuous scanning)
+    // Start selected camera
     const startCamera = useCallback(async () => {
         if (!selectedCameraId) return;
 
-        // If instance exists, stop it first
+        // Cleanup existing instance
         if (scannerRef.current) {
             try {
                 if (scannerRef.current.isScanning) {
@@ -76,93 +126,78 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
         scannerRef.current = scanner;
 
         try {
-            // We start the scanner but with a config that DOESN'T auto-scan essentially
-            // We are just using it to get the video feed up and accessible
-            // Actually, for "Capture" mode, we can just use native video, 
-            // but Html5Qrcode helps manage the camera selection nicely.
-
-            // Note: We are using a dummy qr callback because we don't want continuous results
-            // We want to trigger it manually.
             await scanner.start(
                 selectedCameraId,
                 {
-                    fps: 10, // Lower FPS for viewfinder is fine
+                    fps: 10,
                     qrbox: { width: 300, height: 150 },
                     aspectRatio: 1.333334,
                     videoConstraints: {
-                        width: { min: 1280, ideal: 1920 }, // High res
-                        height: { min: 720, ideal: 1080 },
+                        facingMode: "environment", // Request back camera
                         focusMode: "continuous"
                     }
                 },
-                (decodedText) => {
-                    // If it accidentally works, great!
-                    handleScanSuccess(decodedText);
-                },
-                () => { } // Ignore errors
+                () => { }, // Ignore auto-scan results (we snap manually)
+                () => { }
             );
 
             setIsCameraReady(true);
             setError('');
         } catch (err) {
             console.error("Error starting camera", err);
-            setError("Could not start camera. Please check permissions.");
+            setError("Could not start camera. Try switching cameras.");
         }
     }, [selectedCameraId]);
 
-    const handleScanSuccess = (text: string) => {
-        setScanResult(text);
+    // Handle switching cameras
+    const switchCamera = () => {
+        if (cameras.length <= 1) return;
 
-        // Beep
-        const audio = new AudioContext();
-        const osc = audio.createOscillator();
-        const gain = audio.createGain();
-        osc.connect(gain);
-        gain.connect(audio.destination);
-        osc.start();
-        gain.gain.exponentialRampToValueAtTime(0.00001, audio.currentTime + 0.1);
+        const currentIndex = cameras.findIndex(c => (c as any).deviceId === selectedCameraId || (c as any).id === selectedCameraId);
+        const nextIndex = (currentIndex + 1) % cameras.length;
+        const nextCamera = cameras[nextIndex];
 
-        onScanSuccess(text);
-
-        // Optional: Stop after success
-        // stopCamera();
+        // Handle inconsistent ID naming in library vs standard API
+        const nextId = (nextCamera as any).id || (nextCamera as any).deviceId;
+        setSelectedCameraId(nextId);
     };
 
-    // The Magic: Manual Capture & Scan
+    // Auto-restart camera on selection change
+    useEffect(() => {
+        if (selectedCameraId && isCameraReady) {
+            startCamera();
+        } else if (selectedCameraId && !isCameraReady && !error) {
+            // Initial start wait for user interaction usually, but if we just switched, auto-start
+        }
+    }, [selectedCameraId]);
+
+
+    // MAIN ACTION: Capture Frame & Scan
     const captureAndScan = async () => {
         if (!scannerRef.current || isProcessing) return;
 
         setIsProcessing(true);
+        setProcessingMethod('local');
         setError('');
 
         try {
-            // Use the internal checking of the library itself on the current video frame
-            // This forces a "try to decode NOW" on the current high-res frame
-
-            // Since there isn't a direct "scanCurrentFrame" public API in v2 that returns a promise efficiently,
-            // we will grab the video element from the DOM (which Html5Qrcode manages)
             const videoElement = document.querySelector(`#${regionId} video`) as HTMLVideoElement;
+            if (!videoElement) throw new Error("Video stream not found");
 
-            if (!videoElement) {
-                throw new Error("Video stream not found");
-            }
-
-            // Create a high-res canvas capture
+            // 1. Capture High-Res Snapshot
             const canvas = document.createElement('canvas');
             canvas.width = videoElement.videoWidth;
             canvas.height = videoElement.videoHeight;
             const ctx = canvas.getContext('2d');
             ctx?.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
 
-            // Convert to blob/file
             canvas.toBlob(async (blob) => {
                 if (!blob) {
                     setIsProcessing(false);
                     return;
                 }
 
-                // IMPORTANT: We must STOP the camera scan before starting the file scan
-                // html5-qrcode doesn't allow two scan processes at once
+                // 2. STOP Camera (Critical for file scan to work)
                 if (scannerRef.current?.isScanning) {
                     await scannerRef.current.stop();
                     setIsCameraReady(false);
@@ -170,38 +205,58 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
 
                 const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
 
-                // Scan the captured file
+                // 3. Try Local Scan First
                 try {
                     const result = await scannerRef.current!.scanFileV2(file, true);
                     if (result && result.decodedText) {
                         handleScanSuccess(result.decodedText);
+                        return;
                     }
-                } catch (scanErr) {
-                    console.log("Scan failed for this frame", scanErr);
-                    setError("Could not read barcode. Try again.");
-                    // Restart camera if failed so user can try again
-                    startCamera();
-                } finally {
-                    setIsProcessing(false);
+                } catch (localErr) {
+                    console.log("Local scan failed, trying AI fallback...");
                 }
+
+                // 4. Try Gemini AI Fallback
+                setProcessingMethod('ai');
+                const aiResult = await scanWithGemini(file);
+
+                if (aiResult) {
+                    handleScanSuccess(aiResult);
+                } else {
+                    setError("Could not identify barcode. Ensure good lighting and hold steady.");
+                    startCamera(); // Restart camera for next try
+                }
+
+                setIsProcessing(false);
+                setProcessingMethod(null);
+
             }, 'image/jpeg', 0.95);
 
         } catch (err) {
             console.error(err);
             setIsProcessing(false);
+            setProcessingMethod(null);
+            startCamera();
         }
     };
 
-    const stopCamera = async () => {
-        if (scannerRef.current) {
-            try {
-                await scannerRef.current.stop();
-                scannerRef.current.clear();
-                setIsCameraReady(false);
-            } catch (err) {
-                console.error(err);
-            }
-        }
+    const handleScanSuccess = (text: string) => {
+        setScanResult(text);
+        setIsProcessing(false);
+        setProcessingMethod(null);
+
+        // Success Beep
+        try {
+            const audio = new AudioContext();
+            const osc = audio.createOscillator();
+            const gain = audio.createGain();
+            osc.connect(gain);
+            gain.connect(audio.destination);
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, audio.currentTime + 0.1);
+        } catch (e) { }
+
+        onScanSuccess(text);
     };
 
     return (
@@ -210,103 +265,108 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
             <div className="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
                 <h3 className="font-bold text-gray-800">Barcode Scanner</h3>
 
-                {cameras.length > 0 && !isCameraReady && (
-                    <select
-                        className="p-2 border border-gray-300 rounded-lg text-sm max-w-[200px]"
-                        value={selectedCameraId}
-                        onChange={(e) => setSelectedCameraId(e.target.value)}
+                {cameras.length > 1 && !scanResult && (
+                    <button
+                        onClick={switchCamera}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 text-gray-700 transition-colors"
                     >
-                        {cameras.map((cam: any) => (
-                            <option key={cam.deviceId || cam.id} value={cam.deviceId || cam.id}>
-                                {cam.label ? (cam.label.length > 25 ? cam.label.slice(0, 25) + '...' : cam.label) : `Camera ${cam.deviceId?.slice(0, 5)}`}
-                            </option>
-                        ))}
-                    </select>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Switch Camera
+                    </button>
                 )}
             </div>
 
-            {/* Viewfinder Area */}
+            {/* Viewfinder Container */}
             <div className="relative bg-black min-h-[300px] flex flex-col">
-                {/* Visual Guide Overlay */}
-                {isCameraReady && !scanResult && (
+
+                {/* Visual Guide (Only when active) */}
+                {isCameraReady && !scanResult && !isProcessing && (
                     <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
-                        <div className="w-[80%] h-[150px] border-2 border-red-500 rounded-lg opacity-70 shadow-[0_0_0_100vh_rgba(0,0,0,0.5)]"></div>
-                        <div className="absolute text-white text-xs font-bold top-[60%] bg-black/50 px-2 py-1 rounded">
-                            Place Barcode Here
+                        <div className="w-[85%] h-[160px] border-2 border-red-500 rounded-lg shadow-[0_0_0_100vh_rgba(0,0,0,0.5)]">
+                            {/* Corner Markers */}
+                            <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-red-500 -mt-1 -ml-1"></div>
+                            <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-red-500 -mt-1 -mr-1"></div>
+                            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-red-500 -mb-1 -ml-1"></div>
+                            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-red-500 -mb-1 -mr-1"></div>
+                        </div>
+                        <div className="absolute text-white text-xs font-bold top-[65%] bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                            Snap Photo of Barcode
                         </div>
                     </div>
                 )}
 
-                {/* The Scanner Div */}
-                <div id={regionId} className="w-full h-full flex-grow" />
+                {/* Processing Overlay */}
+                {isProcessing && (
+                    <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm text-white">
+                        <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                        <p className="font-bold text-lg animate-pulse">Processing...</p>
+                        <p className="text-sm text-gray-300 mt-2">
+                            {processingMethod === 'local' ? 'Checking Image...' : 'Analyzing with AI...'}
+                        </p>
+                    </div>
+                )}
 
-                {/* Start / Placeholder State */}
-                {!isCameraReady && !scanResult && (
+                {/* Scanner Element (Video) */}
+                <div id={regionId} className="w-full h-full flex-grow bg-black" />
+
+                {/* Start Button Overlay */}
+                {!isCameraReady && !scanResult && !isProcessing && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6 z-10">
-                        <svg className="w-16 h-16 mb-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                        </svg>
+                        <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-6">
+                            <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
                         <button
                             onClick={startCamera}
-                            disabled={!selectedCameraId}
-                            className="bg-forest hover:bg-forest/90 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform active:scale-95"
+                            className="bg-forest hover:bg-forest/90 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform active:scale-95 flex items-center gap-2"
                         >
-                            Start Camera
+                            <span>Start Camera</span>
                         </button>
                     </div>
                 )}
 
-                {/* Success State */}
+                {/* Success Overlay */}
                 {scanResult && (
                     <div className="absolute inset-0 z-20 bg-white flex flex-col items-center justify-center p-6">
-                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4 animate-bounce">
+                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-[bounce_1s_infinite]">
                             <svg className="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Scanned!</h2>
-                        <p className="text-3xl font-mono text-forest font-bold mb-8">{scanResult}</p>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Barcode Found!</h2>
+                        <p className="text-3xl font-mono text-forest font-bold mb-8 tracking-wider">{scanResult}</p>
                         <button
-                            onClick={() => { setScanResult(null); }}
-                            className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 px-8 rounded-lg"
+                            onClick={() => { setScanResult(null); startCamera(); }}
+                            className="w-full bg-forest text-white font-bold py-4 rounded-xl shadow-lg hover:bg-forest/90 transition-all transform active:scale-98"
                         >
-                            Scan Another
+                            Scan Another Book
                         </button>
                     </div>
                 )}
             </div>
 
-            {/* Footer Controls */}
-            {isCameraReady && !scanResult && (
-                <div className="p-4 bg-gray-900 border-t border-gray-800 flex justify-center gap-4">
+            {/* Manual SNAP Button */}
+            {isCameraReady && !scanResult && !isProcessing && (
+                <div className="p-6 bg-gray-900 border-t border-gray-800 flex justify-center">
                     <button
                         onClick={captureAndScan}
-                        disabled={isProcessing}
-                        className={`
-                            flex-1 max-w-xs py-4 rounded-xl font-bold text-lg text-white shadow-lg transition-all
-                            flex items-center justify-center gap-2
-                            ${isProcessing ? 'bg-gray-600 cursor-wait' : 'bg-red-600 hover:bg-red-500 active:scale-95'}
-                        `}
+                        className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center bg-red-600 hover:bg-red-500 active:scale-90 transition-all shadow-[0_0_15px_rgba(220,38,38,0.5)]"
+                        aria-label="Capture and Scan"
                     >
-                        {isProcessing ? (
-                            <>
-                                <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                Processing...
-                            </>
-                        ) : (
-                            <>
-                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
-                                SNAP & SCAN
-                            </>
-                        )}
+                        <div className="w-16 h-16 rounded-full bg-white/20"></div>
                     </button>
+                    <p className="absolute bottom-2 text-gray-500 text-xs mt-2">Tap to Scan</p>
                 </div>
             )}
 
             {/* Error Message */}
             {error && (
-                <div className="p-3 bg-red-100 text-red-700 text-center text-sm font-medium">
-                    {error}
+                <div className="p-3 bg-red-50 border-t border-red-100 text-red-700 text-center text-sm font-medium animate-pulse">
+                    ⚠️ {error}
                 </div>
             )}
         </div>
