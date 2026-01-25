@@ -18,7 +18,7 @@ type AnalysisMode = 'library' | 'new';
 type IdentifiedBook = { title: string; author: string };
 
 const AdminAnalysisPage: React.FC = () => {
-  const { getBooks } = useBooks();
+  const { getBooks, updateBook } = useBooks();
   const [books, setBooks] = useState<Book[]>([]);
   const [selectedBookId, setSelectedBookId] = useState<string>('');
 
@@ -132,6 +132,36 @@ const AdminAnalysisPage: React.FC = () => {
 
   const currentBookForDisplay = mode === 'library' ? books.find(b => b.id === selectedBookId) : identifiedBook;
 
+  /* Existing display code above... adding the Apply Section */
+  const handleApplyAnalysis = async () => {
+    if (!analysis || !currentBookForDisplay || !("id" in currentBookForDisplay)) return;
+
+    // Safety check: Ensure we are in library mode and have a valid book ID
+    // identifiedBook from 'new' mode doesn't have an ID until saved, so we only support library mode updates here for now
+    if (mode !== 'library' || !selectedBookId) {
+      alert("To save a NEW book, please go to the Library -> Quick Add/Scan page first.");
+      return;
+    }
+
+    // Merge existing tags with new marketing angles
+    const existingTags = (currentBookForDisplay as Book).tags || [];
+    const newTags = Array.from(new Set([...existingTags, ...analysis.marketing_angles])); // Dedupe
+
+    // Update the book
+    // We need to cast updateBook to any temporarily if TS complains about the context type update I made earlier not propagating fast enough in the IDE context, but it should be fine.
+    // Assuming updateBook exists from the useBooks hook (which we updated in step 438)
+    if (updateBook) {
+      await updateBook(selectedBookId, {
+        list_price_cents: Math.round(analysis.suggested_price * 100),
+        tags: newTags,
+        // Optionally we could append rationale to description, but let's keep description clean for now
+      });
+      alert(`Updated "${currentBookForDisplay.title}" with new price ($${analysis.suggested_price}) and ${analysis.marketing_angles.length} new tags!`);
+    } else {
+      console.error("updateBook function missing");
+    }
+  };
+
   return (
     <div>
       <h1 className="font-serif text-4xl font-bold text-deep-blue mb-8">AI-Powered Book Analysis</h1>
@@ -175,6 +205,7 @@ const AdminAnalysisPage: React.FC = () => {
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-forest mx-auto"></div>
             <p className="mt-4 text-gray-600">Contacting Gemini...</p>
+            <p className="text-xs text-gray-400 mt-2">Connecting via Serverless Function...</p>
           </div>
         )}
 
@@ -193,9 +224,17 @@ const AdminAnalysisPage: React.FC = () => {
 
         {analysis && currentBookForDisplay && (
           <div className="mt-6 space-y-6">
-            <div>
-              <h2 className="font-serif text-2xl font-bold text-deep-blue">{currentBookForDisplay.title}</h2>
-              <p className="text-lg text-gray-600">by {currentBookForDisplay.author}</p>
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="font-serif text-2xl font-bold text-deep-blue">{currentBookForDisplay.title}</h2>
+                <p className="text-lg text-gray-600">by {currentBookForDisplay.author}</p>
+              </div>
+              {/* APPLY BUTTON */}
+              {mode === 'library' && (
+                <Button onClick={handleApplyAnalysis} className="shadow-lg shadow-forest/20 animate-bounce">
+                  APPLY TO INVENTORY
+                </Button>
+              )}
             </div>
 
             <div className="border-t pt-4">
@@ -211,7 +250,7 @@ const AdminAnalysisPage: React.FC = () => {
               <p className="bg-accent/10 p-3 rounded-md text-gray-800 whitespace-pre-wrap">{analysis.target_audience}</p>
             </div>
             <div className="border-t pt-4">
-              <h3 className="text-xl font-semibold text-deep-blue mb-2">Marketing Angles</h3>
+              <h3 className="text-xl font-semibold text-deep-blue mb-2">Marketing Angles (Tags)</h3>
               <ul className="list-disc list-inside bg-accent/10 p-3 rounded-md text-gray-800 space-y-1">
                 {analysis.marketing_angles.map((angle, index) => <li key={index}>{angle}</li>)}
               </ul>
