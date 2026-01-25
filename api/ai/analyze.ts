@@ -65,17 +65,21 @@ export default async function handler(
         }
 
         // We use gemini-2.0-flash (proven to work)
-        // We REMOVE the generationConfig/responseMimeType to avoid API errors
-        // We rely on the prompt to enforce JSON
         const result = await ai.models.generateContent({
             model: 'gemini-2.0-flash',
             contents: [{ role: 'user', parts: [{ text: prompt }] }]
         });
 
-        // Parse response safely using the new SDK structure
-        let text = result.response?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        // Fix: Access candidates directly on the result object (New SDK syntax)
+        let text = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-        // Manual cleanup to remove Markdown code blocks if the model ignores our instruction
+        console.log("Debug - AI Raw Response:", text);
+
+        if (!text) {
+            throw new Error("Empty response from AI");
+        }
+
+        // Manual cleanup to remove Markdown code blocks
         text = text.replace(/```json/g, '').replace(/```/g, '').trim();
 
         return res.status(200).json(JSON.parse(text));
