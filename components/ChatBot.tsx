@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI, Chat } from '@google/genai';
 import { useBooks } from '../hooks/useBooks';
 import { Book } from '../types';
 import { env } from '../lib/env';
@@ -40,7 +39,6 @@ const ChatBot: React.FC = () => {
     const { getBooks } = useBooks();
     const [catalog, setCatalog] = useState<Book[]>([]);
 
-    const chatRef = useRef<Chat | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Fetch catalog for context
@@ -65,43 +63,26 @@ const ChatBot: React.FC = () => {
         setIsLoading(true);
 
         try {
-            if (!chatRef.current) {
-                const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
+            // Construct a lightweight catalog string for context
+            const catalogContext = catalog
+                .map((b) => {
+                    const price = b.list_price_cents ? `$${(b.list_price_cents / 100).toFixed(2)}` : 'Price unavailable';
+                    return `- "${b.title}" by ${b.author || 'Unknown Author'} (${b.genre || 'General'}, ${price})`;
+                })
+                .join('\n');
 
-                // Construct a lightweight catalog string for the system prompt
-                const catalogContext = catalog
-                    .map((b) => {
-                        const price = b.list_price_cents ? `$${(b.list_price_cents / 100).toFixed(2)}` : 'Price unavailable';
-                        return `- "${b.title}" by ${b.author || 'Unknown Author'} (${b.genre || 'General'}, ${price})`;
-                    })
-                    .join('\n');
+            const response = await fetch('/api/ai/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: userMsg,
+                    catalogContext
+                })
+            });
 
-                chatRef.current = ai.chats.create({
-                    model: 'gemini-1.5-flash',
-                    config: {
-                        systemInstruction: `You are Kenya, the warm, literate, and helpful owner of "Kenya's Bookstore".
-                        
-                        Your Role:
-                        - Assist customers in finding books from the store's catalog.
-                        - Provide recommendations based on mood, genre, or interests.
-                        - Answer general questions about literature.
-                        
-                        Store Catalog (Use this to know what is in stock):
-                        ${catalogContext}
-                        
-                        Guidelines:
-                        - Tone: Friendly, calm, knowledgeable, slightly sophisticated but accessible (think "cozy library").
-                        - If a user asks for a recommendation, prioritize books listed in the catalog above.
-                        - If a user asks for a book NOT in the catalog, you can discuss it but gently mention that you don't currently have it in stock.
-                        - Keep responses concise (2-4 sentences) as this is a chat interface.
-                        - Do not invent books that don't exist.
-                        `,
-                    }
-                });
-            }
-
-            const result = await chatRef.current.sendMessage({ message: userMsg });
-            setMessages(prev => [...prev, { id: Date.now() + 1, sender: 'bot', text: result.text }]);
+            if (!response.ok) throw new Error('Chat failed');
+            const data = await response.json();
+            setMessages(prev => [...prev, { id: Date.now() + 1, sender: 'bot', text: data.text }]);
 
         } catch (error) {
             console.error("Chat error:", error);
@@ -134,8 +115,8 @@ const ChatBot: React.FC = () => {
                         {messages.map((msg) => (
                             <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm shadow-sm ${msg.sender === 'user'
-                                        ? 'bg-forest text-cream rounded-tr-none'
-                                        : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
+                                    ? 'bg-forest text-cream rounded-tr-none'
+                                    : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
                                     }`}>
                                     {msg.text}
                                 </div>

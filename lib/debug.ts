@@ -1,7 +1,6 @@
 
 import { getSupabaseClient } from './supabaseClient';
 import { env } from './env';
-import { GoogleGenAI } from '@google/genai';
 
 export const checkConnections = async () => {
     const results = {
@@ -32,16 +31,20 @@ export const checkConnections = async () => {
         if (!env.gemini.apiKey) {
             results.gemini = { status: 'failed', message: 'API Key missing' };
         } else {
-            const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey });
-            const model = ai.models.get({ model: 'models/gemini-1.5-flash' }); // explicit get check
-            // Actually try to generate a tiny string
+            // Actually try to generate a tiny string via API
             try {
-                // @ts-ignore
-                const resp = await ai.models.generateContent({
-                    model: 'gemini-1.5-flash',
-                    contents: [{ role: 'user', parts: [{ text: 'Hello' }] }]
+                const response = await fetch('/api/ai/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'identify', payload: { query: 'Hello' } })
                 });
-                results.gemini = { status: 'success', message: 'Generated content successfully' };
+
+                if (response.ok) {
+                    results.gemini = { status: 'success', message: 'API responded successfully' };
+                } else {
+                    const error = await response.json();
+                    results.gemini = { status: 'failed', message: `API Error: ${error.message || response.statusText}` };
+                }
             } catch (genErr: any) {
                 results.gemini = { status: 'failed', message: `Generation failed: ${genErr.message}` };
             }

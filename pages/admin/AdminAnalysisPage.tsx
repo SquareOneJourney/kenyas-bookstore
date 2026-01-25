@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleGenAI } from '@google/genai';
 import { Book } from '../../types';
 import { useBooks } from '../../hooks/useBooks';
 import Select from '../../components/ui/Select';
@@ -64,15 +63,14 @@ const AdminAnalysisPage: React.FC = () => {
     resetState();
 
     try {
-      const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
-      const prompt = `Identify this book: "${newBookQuery}". Return JSON: {"title": "string", "author": "string"}`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+      const response = await fetch('/api/ai/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'identify', payload: { query: newBookQuery } })
       });
 
-      const foundBook = JSON.parse(response.text.replace(/```json|```/g, '').trim()) as IdentifiedBook;
+      if (!response.ok) throw new Error('Failed to identify book');
+      const foundBook = await response.json() as IdentifiedBook;
       setIdentifiedBook(foundBook);
       setNeedsConfirmation(true);
 
@@ -114,27 +112,14 @@ const AdminAnalysisPage: React.FC = () => {
     setNeedsConfirmation(false);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
-
-      const prompt = `
-        Analyze this book for "Kenya's Bookstore":
-        Title: "${bookToAnalyze.title}"
-        Author: "${bookToAnalyze.author}"
-        Format: ${bookToAnalyze.format}
-
-        Return JSON:
-        "suggested_price": number,
-        "rationale": string,
-        "target_audience": string,
-        "marketing_angles": [stringArray]
-      `;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+      const response = await fetch('/api/ai/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'analyze', payload: bookToAnalyze })
       });
 
-      const parsedAnalysis = JSON.parse(response.text.replace(/```json|```/g, '').trim()) as BookAnalysis;
+      if (!response.ok) throw new Error('Failed to analyze book');
+      const parsedAnalysis = await response.json() as BookAnalysis;
       setAnalysis(parsedAnalysis);
 
     } catch (e) {

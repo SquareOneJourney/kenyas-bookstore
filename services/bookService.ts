@@ -1,5 +1,4 @@
 
-import { GoogleGenAI } from '@google/genai';
 import { Book, BookCondition } from '../types';
 import { env } from '../lib/env';
 
@@ -93,24 +92,14 @@ export const BookService = {
    */
   async enrichBookData(partialBook: Partial<Book>): Promise<Partial<Book>> {
     try {
-      const apiKey = env.gemini.apiKey || '';
-      if (!apiKey) return partialBook;
-
-      const ai = new GoogleGenAI({ apiKey });
-      const prompt = `
-        I have a book: "${partialBook.title}" by "${partialBook.author}".
-        Return a JSON object with: 
-        "description": 2-sentence marketing hook.
-        "tags": [5 tag strings].
-        "price": Estimated USD price.
-      `;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+      const response = await fetch('/api/ai/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'enrich', payload: partialBook })
       });
 
-      const data = JSON.parse(response.text.replace(/```json|```/g, '').trim());
+      if (!response.ok) throw new Error('AI Enrichment failed');
+      const data = await response.json();
 
       return {
         ...partialBook,
