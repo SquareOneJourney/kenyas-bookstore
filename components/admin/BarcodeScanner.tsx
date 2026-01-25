@@ -18,16 +18,27 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
     const scannerRef = useRef<Html5Qrcode | null>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
-    // Get cameras on mount
+    // Get available cameras
     useEffect(() => {
         Html5Qrcode.getCameras().then(devices => {
             if (devices && devices.length) {
-                setCameras(devices);
-                // Prefer back camera
-                const backCamera = devices.find(id =>
-                    id.label.toLowerCase().includes('back') ||
-                    id.label.toLowerCase().includes('environment')
+                // Fix: map the Html5Qrcode result correctly
+                // The library returns objects with { id, label }
+                const formattedDevices = devices.map(d => ({
+                    deviceId: d.id,
+                    label: d.label
+                })) as unknown as MediaDeviceInfo[];
+
+                setCameras(formattedDevices);
+
+                // Prioritize back camera ("environment")
+                const backCamera = devices.find(device =>
+                    device.label.toLowerCase().includes('back') ||
+                    device.label.toLowerCase().includes('environment') ||
+                    device.label.toLowerCase().includes('rear')
                 );
+
+                // Set default to back camera if found, else first available
                 setSelectedCameraId(backCamera ? backCamera.id : devices[0].id);
             } else {
                 setError('No cameras found');
@@ -201,13 +212,13 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
 
                 {cameras.length > 0 && !isCameraReady && (
                     <select
-                        className="p-2 border border-gray-300 rounded-lg text-sm max-w-[150px]"
+                        className="p-2 border border-gray-300 rounded-lg text-sm max-w-[200px]"
                         value={selectedCameraId}
                         onChange={(e) => setSelectedCameraId(e.target.value)}
                     >
-                        {cameras.map(cam => (
-                            <option key={cam.id} value={cam.id}>
-                                {cam.label ? cam.label.slice(0, 20) + '...' : `Camera ${cam.id.slice(0, 5)}`}
+                        {cameras.map((cam: any) => (
+                            <option key={cam.deviceId || cam.id} value={cam.deviceId || cam.id}>
+                                {cam.label ? (cam.label.length > 25 ? cam.label.slice(0, 25) + '...' : cam.label) : `Camera ${cam.deviceId?.slice(0, 5)}`}
                             </option>
                         ))}
                     </select>
