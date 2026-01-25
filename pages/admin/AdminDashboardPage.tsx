@@ -19,7 +19,7 @@ import { checkConnections } from '../../lib/debug';
 const AdminDashboardPage: React.FC = () => {
     const totalBooks = BOOKS.length;
     const totalOrders = MOCK_ORDERS.length;
-    const totalRevenue = MOCK_ORDERS.reduce((sum, order) => sum + order.total, 0);
+    const totalRevenue = MOCK_ORDERS.reduce((sum, order) => sum + (order.total_cents ?? 0), 0) / 100;
 
     const handleDebug = async () => {
         alert("Checking connections...");

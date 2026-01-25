@@ -91,7 +91,7 @@ const AdminMarketingPage: React.FC = () => {
                                     </div>
                                 </div>
                                 <p className="font-bold text-sm">
-                                    {formatMoneyFromCents(book.list_price_cents ?? 0, book.currency || 'USD')}
+                                    {formatMoneyFromCents(book.list_price_cents ?? 0, 'USD')}
                                 </p>
                             </div>
                         ))}

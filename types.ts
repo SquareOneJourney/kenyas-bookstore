@@ -31,6 +31,11 @@ export type Book = {
   cost_basis?: number | null;
   ingram_stock_level?: 'In Stock' | 'Low Stock' | 'Out of Stock' | string | null;
   last_stock_sync?: string | null;
+  // Additional fields used in the app
+  currency?: string | null;
+  is_active?: boolean | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 };
 
 /**

@@ -96,10 +96,8 @@ const AdminLibraryPage: React.FC = () => {
             tags: scannedBook.tags || [],
             supply_source: formSource,
             cost_basis: ingramStatus?.wholesalePrice || 0,
-            currency: scannedBook.currency || 'USD',
             is_active: true,
             created_at: scannedBook.created_at || new Date().toISOString(),
-            updated_at: scannedBook.updated_at || new Date().toISOString(),
         };
 
         addBooks([newBook]);
@@ -337,7 +335,7 @@ const AdminLibraryPage: React.FC = () => {
                                     <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
                                         <div className="flex flex-col">
                                             <span className="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Price</span>
-                                            <span className="text-sm md:text-base font-bold text-deep-blue">{formatMoneyFromCents(book.list_price_cents ?? 0, book.currency || 'USD')}</span>
+                                            <span className="text-sm md:text-base font-bold text-deep-blue">{formatMoneyFromCents(book.list_price_cents ?? 0, 'USD')}</span>
                                         </div>
                                         <div className="flex flex-col items-end">
                                             <span className="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Stock</span>
