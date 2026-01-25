@@ -19,15 +19,15 @@ export interface ListBooksOptions {
 /**
  * List active books from Supabase
  * 
- * Always filters by is_active = true for public catalog.
+ * Fetches all books from the catalog.
  * Supports search by title/author/ISBN and sorting.
  * 
  * @param options - Search and sort options
- * @returns Array of active books
+ * @returns Array of books
  */
 export async function listActiveBooks(options: ListBooksOptions = {}): Promise<BookRow[]> {
   const supabase = getSupabaseClient();
-  
+
   if (!supabase) {
     // Fallback to empty array if Supabase not configured
     // In production, this should show an error UI
@@ -38,13 +38,12 @@ export async function listActiveBooks(options: ListBooksOptions = {}): Promise<B
   try {
     let query = supabase
       .from('books')
-      .select('*')
-      .eq('is_active', true);
+      .select('*');
 
     // Apply search
     if (options.q) {
       const normalizedQ = normalizeSearch(options.q);
-      
+
       if (isISBNQuery(normalizedQ)) {
         // Search by ISBN (exact match preferred, but use ilike for flexibility)
         query = query.or(`isbn13.ilike.%${normalizedQ}%,isbn10.ilike.%${normalizedQ}%`);
@@ -94,7 +93,7 @@ export async function listActiveBooks(options: ListBooksOptions = {}): Promise<B
  */
 export async function getBookById(id: string): Promise<BookRow | null> {
   const supabase = getSupabaseClient();
-  
+
   if (!supabase) {
     console.warn('Supabase not configured. Cannot fetch book.');
     return null;
@@ -105,7 +104,6 @@ export async function getBookById(id: string): Promise<BookRow | null> {
       .from('books')
       .select('*')
       .eq('id', id)
-      .eq('is_active', true)
       .single();
 
     if (error) {

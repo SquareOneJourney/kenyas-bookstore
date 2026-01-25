@@ -2,12 +2,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
-import { GoogleGenAI, Type } from '@google/genai';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '../components/ui/sidebar';
 import { Separator } from '../components/ui/separator';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '../components/ui/breadcrumb';
 import AppSidebar from '../components/AppSidebar';
-import { env } from '../lib/env';
 
 
 type Difficulty = 'easy' | 'medium' | 'hard';
@@ -25,7 +23,7 @@ const ChessPage: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
     { sender: 'System', text: "Welcome! Choose your difficulty and let's play." }
   ]);
-  
+
   const updateStatus = () => {
     let status = '';
     const moveColor = game.turn() === 'b' ? 'Black (Kenya)' : 'White (You)';
@@ -42,10 +40,10 @@ const ChessPage: React.FC = () => {
     }
     setGameStatus(status);
   };
-  
+
   useEffect(() => {
     updateStatus();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const addChatMessage = (sender: 'Kenya' | 'System', text: string) => {
@@ -69,33 +67,22 @@ const ChessPage: React.FC = () => {
     const maxRetries = 3;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
-        const pgn = game.pgn();
-        const prompt = `You are Kenya, a friendly and encouraging chess partner. Your opponent (White) just made the move: ${userMoveSan}. The game history is in PGN format.
-${getDifficultyPrompt()}
-
-Your task is to provide a reaction to your opponent's move.
-
-Your response must be a valid JSON object with one key:
-1. "commentary": A short, sweet, genuine, and funny comment reacting to your opponent's move. Keep it under 25 words.
-
-PGN:
-${pgn}`;
-        const response = await ai.models.generateContent({
-          model: 'gemini-1.5-flash',
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                commentary: { type: Type.STRING },
-              },
-            },
-          },
+        const response = await fetch('/api/ai/chess', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'reaction',
+            pgn: game.pgn(),
+            userMove: userMoveSan,
+            difficultyPrompt: getDifficultyPrompt()
+          })
         });
-        const jsonText = response.text.replace(/```json|```/g, '').trim();
-        const aiResponse = JSON.parse(jsonText);
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const aiResponse = await response.json();
         addChatMessage('Kenya', aiResponse.commentary);
         return;
       } catch (error: any) {
@@ -121,33 +108,21 @@ ${pgn}`;
     const maxRetries = 3;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
-        const pgn = game.pgn();
-        const prompt = `You are Kenya, a friendly and encouraging chess partner. It is your turn to play. Your color is black. The game history is in PGN format.
-${getDifficultyPrompt()}
-
-Your response must be a valid JSON object with two keys:
-1. "move": The best move in Standard Algebraic Notation (SAN) based on the difficulty. Do not include check (+) or checkmate (#) symbols.
-2. "commentary": A short, sweet, genuine, and funny comment about your move or the game state. Keep it under 25 words.
-
-PGN:
-${pgn}`;
-        const response = await ai.models.generateContent({
-          model: 'gemini-1.5-flash',
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                move: { type: Type.STRING },
-                commentary: { type: Type.STRING },
-              },
-            },
-          },
+        const response = await fetch('/api/ai/chess', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'move',
+            pgn: game.pgn(),
+            difficultyPrompt: getDifficultyPrompt()
+          })
         });
-        const jsonText = response.text.replace(/```json|```/g, '').trim();
-        const aiResponse = JSON.parse(jsonText);
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const aiResponse = await response.json();
         const aiMove = aiResponse.move.trim().replace(/[+#]/g, '');
         const moveResult = game.move(aiMove);
         if (moveResult) {
@@ -183,23 +158,23 @@ ${pgn}`;
 
   const handleUserMoveSequence = async (userMoveSan: string) => {
     setIsLoadingAI(true);
-    
+
     try {
-        // Short delay for the user to see their move
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        await getAiReactionToUserMove(userMoveSan);
-        
-        // A small delay before Kenya makes her move, for a more natural pace
-        if (!game.isGameOver()) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            await makeAiMove();
-        }
+      // Short delay for the user to see their move
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      await getAiReactionToUserMove(userMoveSan);
+
+      // A small delay before Kenya makes her move, for a more natural pace
+      if (!game.isGameOver()) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await makeAiMove();
+      }
     } catch (error) {
-        console.error("Error in move sequence:", error);
-        addChatMessage('System', 'A glitch in the matrix occurred. Please try moving again or reset the game.');
+      console.error("Error in move sequence:", error);
+      addChatMessage('System', 'A glitch in the matrix occurred. Please try moving again or reset the game.');
     } finally {
-        setIsLoadingAI(false);
+      setIsLoadingAI(false);
     }
   }
 
@@ -219,7 +194,7 @@ ${pgn}`;
 
     setGamePosition(game.fen());
     updateStatus();
-    
+
     handleUserMoveSequence(move.san);
 
     return true;

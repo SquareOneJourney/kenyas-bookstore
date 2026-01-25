@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleGenAI } from '@google/genai';
 import { Wish, Book } from '../types';
-import { env } from '../lib/env';
 import Button from './ui/Button';
 
 interface GeminiRecommendation {
@@ -27,28 +25,25 @@ const DonationModal: React.FC<{
       setIsLoading(true);
       setError(null);
       try {
-        const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
         const libraryForPrompt = allBooks.map(({ title, author, genre, description }) => ({ title, author, genre, description }));
 
-        const prompt = `
-          You are a compassionate bookseller helping a donor choose a book for a child.
-          The request is for a ${wish.age}-year-old who is interested in "${wish.interests}" and needs a book with the theme: "${wish.theme}".
-          
-          From the following library, please recommend the 3 most suitable, age-appropriate books.
-          Library: ${JSON.stringify(libraryForPrompt)}
-
-          Provide your response as a valid JSON object with a single key "recommendations" which is an array of objects. Each object must have "title" and "author" keys that exactly match the library data.
-        `;
-
-        const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
-            contents: prompt,
+        const response = await fetch('/api/ai/donation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'recommendations',
+            wish: { age: wish.age, interests: wish.interests, theme: wish.theme },
+            library: libraryForPrompt
+          })
         });
 
-        const text = response.text.replace(/```json|```/g, '').trim();
-        const parsed: { recommendations: GeminiRecommendation[] } = JSON.parse(text);
+        if (!response.ok) {
+          throw new Error('Failed to get recommendations');
+        }
 
-        const foundBooks = parsed.recommendations.map(rec => 
+        const parsed: { recommendations: GeminiRecommendation[] } = await response.json();
+
+        const foundBooks = parsed.recommendations.map(rec =>
           allBooks.find(b => b.title === rec.title && b.author === rec.author)
         ).filter((b): b is Book => !!b);
 
@@ -67,20 +62,26 @@ const DonationModal: React.FC<{
     if (!selectedBook) return;
     setIsSuggesting(true);
     try {
-        const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
-        const prompt = `
-            Write a short, anonymous, encouraging message (2-3 sentences) to a ${wish.age}-year-old child who will receive the book "${selectedBook.title}". The message should be warm, supportive, and reflect the book's positive themes.
-            The child's interests are "${wish.interests}" and the requested theme was "${wish.theme}".
-        `;
-        const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
-            contents: prompt,
-        });
-        setDonorNote(response.text.trim());
-    } catch(e) {
-        console.error("Error suggesting note:", e);
+      const response = await fetch('/api/ai/donation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'note',
+          wish: { age: wish.age, interests: wish.interests, theme: wish.theme },
+          selectedBook: { title: selectedBook.title }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get note suggestion');
+      }
+
+      const data = await response.json();
+      setDonorNote(data.note);
+    } catch (e) {
+      console.error("Error suggesting note:", e);
     } finally {
-        setIsSuggesting(false);
+      setIsSuggesting(false);
     }
   };
 
@@ -108,8 +109,8 @@ const DonationModal: React.FC<{
           {error && <p className="text-red-500">{error}</p>}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             {recommendations.map(book => (
-              <div 
-                key={book.id} 
+              <div
+                key={book.id}
                 className={`p-2 border-2 rounded-lg cursor-pointer transition-all ${selectedBook?.id === book.id ? 'border-forest bg-forest/10' : 'border-transparent hover:border-accent'}`}
                 onClick={() => setSelectedBook(book)}
               >

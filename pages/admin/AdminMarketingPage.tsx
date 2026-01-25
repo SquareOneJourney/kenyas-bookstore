@@ -3,8 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useBooks } from '../../hooks/useBooks';
 import { Book } from '../../types';
 import Button from '../../components/ui/Button';
-import { GoogleGenAI } from '@google/genai';
-import { env } from '../../lib/env';
 import { formatMoneyFromCents } from '../../lib/money';
 
 const AdminMarketingPage: React.FC = () => {
@@ -30,27 +28,20 @@ const AdminMarketingPage: React.FC = () => {
 
         try {
             const selectedData = books.filter(b => selectedBooks.includes(b.id));
-            const ai = new GoogleGenAI({ apiKey: env.gemini.apiKey || '' });
 
-            const prompt = `
-            I want to sell these specific books as a "Curated Bundle" or "Mystery Box".
-            Books: ${selectedData.map(b => `"${b.title}" by ${b.author} (${b.genre})`).join(', ')}
-            
-            Create a marketing campaign for this bundle. Return JSON:
-            {
-                "name": "Creative catchy name for the bundle",
-                "description": "2 sentences selling the 'vibe' of this combination."
-            }
-        `;
-
-            const response = await ai.models.generateContent({
-                model: 'gemini-1.5-flash',
-                contents: prompt,
-                config: { responseMimeType: 'application/json' }
+            const response = await fetch('/api/ai/bundle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    books: selectedData.map(b => ({ title: b.title, author: b.author, genre: b.genre }))
+                })
             });
 
-            const text = response.text.replace(/```json|```/g, '').trim();
-            const data = JSON.parse(text);
+            if (!response.ok) {
+                throw new Error('Failed to generate bundle');
+            }
+
+            const data = await response.json();
 
             const totalPriceCents = selectedData.reduce((sum, b) => sum + (b.list_price_cents ?? 0), 0);
             const discountPriceCents = Math.round(totalPriceCents * 0.85); // 15% discount for bundles

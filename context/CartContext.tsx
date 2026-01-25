@@ -101,15 +101,14 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const bookId = localItem.book_id || localItem.id; // Support old format
             if (!bookId) continue;
 
-            // Check if book exists and is active
+            // Check if book exists
             const { data: book } = await supabase
               .from('books')
-              .select('id, is_active')
+              .select('id')
               .eq('id', bookId)
-              .eq('is_active', true)
               .single();
 
-            if (!book) continue; // Skip inactive or missing books
+            if (!book) continue; // Skip missing books
 
             const existingQty = dbCartMap.get(bookId) || 0;
             const newQty = existingQty + (localItem.quantity || 1);
@@ -128,7 +127,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
           // Clear localStorage after merge
           window.localStorage.removeItem(CART_STORAGE_KEY);
-          
+
           // Reload cart from DB
           await loadCart();
         } catch (error) {
@@ -189,7 +188,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => item.book_id === book.id);
       let newItems: CartItem[];
-      
+
       if (existingItem) {
         newItems = prevItems.map(item =>
           item.book_id === book.id
