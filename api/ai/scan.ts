@@ -31,15 +31,13 @@ export default async function handler(
             return res.status(400).json({ error: 'No image data provided' });
         }
 
-        // Initialize with the new SDK syntax matching your other project
-        // Note: The new SDK supports slightly different initialization patterns
         const ai = new GoogleGenAI({ apiKey });
 
         const prompt = "Locate the barcode on this book cover. Read the ISBN-13 number (starts with 978 or 979) or the ISBN-10 number. Return ONLY the digits of the number, nothing else. If there are dashes, remove them.";
 
-        // Generating content with the new SDK
+        // Use 'gemini-1.5-flash-latest' which is generally more stable across SDK versions
         const result = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-1.5-flash-latest',
             contents: [
                 {
                     role: 'user',
@@ -56,8 +54,7 @@ export default async function handler(
             ]
         });
 
-        // Safe response parsing for the new SDK structure
-        // In the new SDK, 'result' IS the response object mostly, but let's check the structure
+        // Safe response parsing 
         const text = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
         const cleaned = text.replace(/[^0-9X]/gi, '');
 
