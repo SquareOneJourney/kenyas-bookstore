@@ -1,386 +1,303 @@
-import React, { useRef, useState, useCallback } from 'react';
-import Quagga from '@ericblade/quagga2';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 
 interface BarcodeScannerProps {
     onScanSuccess: (decodedText: string) => void;
     onScanFailure?: (error: any) => void;
 }
 
-const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
-    onScanSuccess,
-    onScanFailure,
-}) => {
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const streamRef = useRef<MediaStream | null>(null);
+const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
+    const [isCameraReady, setIsCameraReady] = useState(false);
+    const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
+    const [selectedCameraId, setSelectedCameraId] = useState<string>('');
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [scanResult, setScanResult] = useState<string | null>(null);
+    const [error, setError] = useState<string>('');
 
-    const [mode, setMode] = useState<'upload' | 'camera'>('upload');
-    const [cameraReady, setCameraReady] = useState(false);
-    const [processing, setProcessing] = useState(false);
-    const [lastScanned, setLastScanned] = useState<string | null>(null);
-    const [scanCount, setScanCount] = useState(0);
-    const [previewImage, setPreviewImage] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [debugInfo, setDebugInfo] = useState<string>('');
+    const regionId = "html5qr-code-capture-region";
+    const scannerRef = useRef<Html5Qrcode | null>(null);
+    const videoRef = useRef<HTMLVideoElement | null>(null);
 
-    // Validate ISBN format
-    const isValidISBN = (code: string): boolean => {
-        const clean = code.replace(/[-\s]/g, '');
-        if (/^97[89]\d{10}$/.test(clean)) return true;
-        if (/^\d{9}[\dXx]$/.test(clean)) return true;
-        if (/^\d{13}$/.test(clean)) return true;
-        if (/^\d{12}$/.test(clean)) return true;
-        return false;
-    };
-
-    // Decode barcode from image
-    const decodeImage = useCallback(async (imageDataUrl: string): Promise<void> => {
-        setProcessing(true);
-        setError(null);
-        setDebugInfo('Processing image...');
-
-        try {
-            const result = await new Promise<any>((resolve, reject) => {
-                Quagga.decodeSingle({
-                    src: imageDataUrl,
-                    numOfWorkers: 0,
-                    decoder: {
-                        readers: [
-                            "ean_reader",
-                            "ean_8_reader",
-                            "upc_reader",
-                            "code_128_reader",
-                            "code_39_reader",
-                        ],
-                        multiple: false
-                    },
-                    locate: true,
-                    locator: {
-                        patchSize: "large",
-                        halfSample: false
-                    }
-                }, (result) => {
-                    if (result && result.codeResult && result.codeResult.code) {
-                        resolve(result);
-                    } else {
-                        reject(new Error("No barcode detected in image"));
-                    }
-                });
-            });
-
-            const code = result.codeResult.code;
-            const format = result.codeResult.format;
-
-            console.log(`📸 Decoded: ${code} (${format})`);
-
-            if (!isValidISBN(code)) {
-                setError(`Detected "${code}" but it doesn't look like a valid ISBN. Try again with a clearer photo.`);
-                setDebugInfo(`Invalid format: ${format}`);
-                setProcessing(false);
-                return;
+    // Get cameras on mount
+    useEffect(() => {
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length) {
+                setCameras(devices);
+                // Prefer back camera
+                const backCamera = devices.find(id =>
+                    id.label.toLowerCase().includes('back') ||
+                    id.label.toLowerCase().includes('environment')
+                );
+                setSelectedCameraId(backCamera ? backCamera.id : devices[0].id);
+            } else {
+                setError('No cameras found');
             }
+        }).catch(err => {
+            console.error(err);
+            setError('Camera permission denied or no camera found.');
+        });
 
-            // SUCCESS!
-            console.log(`✅ Valid ISBN: ${code}`);
-            setLastScanned(code);
-            setScanCount(prev => prev + 1);
-            setDebugInfo(`Success! ISBN: ${code}`);
-            setPreviewImage(null);
-
-            // Play beep
-            try {
-                const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.frequency.value = 1500;
-                gain.gain.value = 0.3;
-                osc.start();
-                setTimeout(() => { osc.stop(); ctx.close(); }, 150);
-            } catch (e) { }
-
-            onScanSuccess(code);
-
-        } catch (err: any) {
-            console.error("Decode error:", err);
-            setError("No barcode found in image. Make sure the barcode is clear, well-lit, and fully visible.");
-            setDebugInfo('Try a different photo');
-        } finally {
-            setProcessing(false);
-        }
-    }, [onScanSuccess]);
-
-    // Handle file upload
-    const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            const imageDataUrl = event.target?.result as string;
-            setPreviewImage(imageDataUrl);
-            await decodeImage(imageDataUrl);
+        // Cleanup
+        return () => {
+            if (scannerRef.current?.isScanning) {
+                scannerRef.current.stop().catch(console.error);
+            }
         };
-        reader.readAsDataURL(file);
+    }, []);
 
-        // Reset input so same file can be selected again
-        e.target.value = '';
-    }, [decodeImage]);
-
-    // Start camera
+    // Start the camera stream (Viewfinder only, no continuous scanning)
     const startCamera = useCallback(async () => {
-        setMode('camera');
-        setCameraReady(false);
-        setError(null);
+        if (!selectedCameraId) return;
+
+        // If instance exists, stop it first
+        if (scannerRef.current) {
+            try {
+                if (scannerRef.current.isScanning) {
+                    await scannerRef.current.stop();
+                }
+                scannerRef.current.clear();
+            } catch (e) {
+                // Ignore stop errors
+            }
+        }
+
+        const scanner = new Html5Qrcode(regionId);
+        scannerRef.current = scanner;
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: 'environment',
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                }
-            });
+            // We start the scanner but with a config that DOESN'T auto-scan essentially
+            // We are just using it to get the video feed up and accessible
+            // Actually, for "Capture" mode, we can just use native video, 
+            // but Html5Qrcode helps manage the camera selection nicely.
 
-            streamRef.current = stream;
+            // Note: We are using a dummy qr callback because we don't want continuous results
+            // We want to trigger it manually.
+            await scanner.start(
+                selectedCameraId,
+                {
+                    fps: 10, // Lower FPS for viewfinder is fine
+                    qrbox: { width: 300, height: 150 },
+                    aspectRatio: 1.333334,
+                    videoConstraints: {
+                        width: { min: 1280, ideal: 1920 }, // High res
+                        height: { min: 720, ideal: 1080 },
+                        focusMode: "continuous"
+                    }
+                },
+                (decodedText) => {
+                    // If it accidentally works, great!
+                    handleScanSuccess(decodedText);
+                },
+                () => { } // Ignore errors
+            );
 
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                await videoRef.current.play();
-                setCameraReady(true);
-                setDebugInfo('Camera ready - position barcode and tap Capture');
-            }
-        } catch (err: any) {
-            setError("Camera access denied. Please allow camera permission.");
-            setMode('upload');
+            setIsCameraReady(true);
+            setError('');
+        } catch (err) {
+            console.error("Error starting camera", err);
+            setError("Could not start camera. Please check permissions.");
         }
-    }, []);
+    }, [selectedCameraId]);
 
-    // Stop camera
-    const stopCamera = useCallback(() => {
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(t => t.stop());
-            streamRef.current = null;
-        }
-        setCameraReady(false);
-        setMode('upload');
-    }, []);
+    const handleScanSuccess = (text: string) => {
+        setScanResult(text);
 
-    // Capture from camera
-    const captureFromCamera = useCallback(async () => {
-        if (!videoRef.current || !canvasRef.current || processing) return;
+        // Beep
+        const audio = new AudioContext();
+        const osc = audio.createOscillator();
+        const gain = audio.createGain();
+        osc.connect(gain);
+        gain.connect(audio.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, audio.currentTime + 0.1);
 
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+        onScanSuccess(text);
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0);
-
-        const imageDataUrl = canvas.toDataURL('image/png');
-        setPreviewImage(imageDataUrl);
-
-        // Stop camera after capture
-        stopCamera();
-
-        // Process the image
-        await decodeImage(imageDataUrl);
-    }, [processing, decodeImage, stopCamera]);
-
-    const triggerFileInput = () => {
-        fileInputRef.current?.click();
+        // Optional: Stop after success
+        // stopCamera();
     };
 
-    const clearPreview = () => {
-        setPreviewImage(null);
-        setError(null);
-        setDebugInfo('');
+    // The Magic: Manual Capture & Scan
+    const captureAndScan = async () => {
+        if (!scannerRef.current || isProcessing) return;
+
+        setIsProcessing(true);
+        setError('');
+
+        try {
+            // Use the internal checking of the library itself on the current video frame
+            // This forces a "try to decode NOW" on the current high-res frame
+
+            // Since there isn't a direct "scanCurrentFrame" public API in v2 that returns a promise efficiently,
+            // we will grab the video element from the DOM (which Html5Qrcode manages)
+            const videoElement = document.querySelector(`#${regionId} video`) as HTMLVideoElement;
+
+            if (!videoElement) {
+                throw new Error("Video stream not found");
+            }
+
+            // Create a high-res canvas capture
+            const canvas = document.createElement('canvas');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+            // Convert to blob/file
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    setIsProcessing(false);
+                    return;
+                }
+
+                // IMPORTANT: We must STOP the camera scan before starting the file scan
+                // html5-qrcode doesn't allow two scan processes at once
+                if (scannerRef.current?.isScanning) {
+                    await scannerRef.current.stop();
+                    setIsCameraReady(false);
+                }
+
+                const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
+
+                // Scan the captured file
+                try {
+                    const result = await scannerRef.current!.scanFileV2(file, true);
+                    if (result && result.decodedText) {
+                        handleScanSuccess(result.decodedText);
+                    }
+                } catch (scanErr) {
+                    console.log("Scan failed for this frame", scanErr);
+                    setError("Could not read barcode. Try again.");
+                    // Restart camera if failed so user can try again
+                    startCamera();
+                } finally {
+                    setIsProcessing(false);
+                }
+            }, 'image/jpeg', 0.95);
+
+        } catch (err) {
+            console.error(err);
+            setIsProcessing(false);
+        }
+    };
+
+    const stopCamera = async () => {
+        if (scannerRef.current) {
+            try {
+                await scannerRef.current.stop();
+                scannerRef.current.clear();
+                setIsCameraReady(false);
+            } catch (err) {
+                console.error(err);
+            }
+        }
     };
 
     return (
-        <div className="w-full max-w-lg mx-auto">
-            {/* Last scanned banner */}
-            {lastScanned && (
-                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-green-600">
-                                Last Scanned ISBN ({scanCount} total)
-                            </p>
-                            <p className="text-2xl font-mono font-bold text-green-700">{lastScanned}</p>
+        <div className="w-full max-w-lg mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+            {/* Header */}
+            <div className="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                <h3 className="font-bold text-gray-800">Barcode Scanner</h3>
+
+                {cameras.length > 0 && !isCameraReady && (
+                    <select
+                        className="p-2 border border-gray-300 rounded-lg text-sm max-w-[150px]"
+                        value={selectedCameraId}
+                        onChange={(e) => setSelectedCameraId(e.target.value)}
+                    >
+                        {cameras.map(cam => (
+                            <option key={cam.id} value={cam.id}>
+                                {cam.label ? cam.label.slice(0, 20) + '...' : `Camera ${cam.id.slice(0, 5)}`}
+                            </option>
+                        ))}
+                    </select>
+                )}
+            </div>
+
+            {/* Viewfinder Area */}
+            <div className="relative bg-black min-h-[300px] flex flex-col">
+                {/* Visual Guide Overlay */}
+                {isCameraReady && !scanResult && (
+                    <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
+                        <div className="w-[80%] h-[150px] border-2 border-red-500 rounded-lg opacity-70 shadow-[0_0_0_100vh_rgba(0,0,0,0.5)]"></div>
+                        <div className="absolute text-white text-xs font-bold top-[60%] bg-black/50 px-2 py-1 rounded">
+                            Place Barcode Here
                         </div>
-                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    </div>
+                )}
+
+                {/* The Scanner Div */}
+                <div id={regionId} className="w-full h-full flex-grow" />
+
+                {/* Start / Placeholder State */}
+                {!isCameraReady && !scanResult && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6 z-10">
+                        <svg className="w-16 h-16 mb-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        </svg>
+                        <button
+                            onClick={startCamera}
+                            disabled={!selectedCameraId}
+                            className="bg-forest hover:bg-forest/90 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform active:scale-95"
+                        >
+                            Start Camera
+                        </button>
+                    </div>
+                )}
+
+                {/* Success State */}
+                {scanResult && (
+                    <div className="absolute inset-0 z-20 bg-white flex flex-col items-center justify-center p-6">
+                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4 animate-bounce">
+                            <svg className="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Main content area */}
-            <div className="bg-gray-100 rounded-2xl p-6 border border-gray-200">
-                {/* Camera mode */}
-                {mode === 'camera' && (
-                    <div className="relative">
-                        <video
-                            ref={videoRef}
-                            className="w-full rounded-xl bg-black"
-                            style={{ minHeight: '280px' }}
-                            playsInline
-                            muted
-                        />
-                        <canvas ref={canvasRef} className="hidden" />
-
-                        {/* Camera overlay */}
-                        {cameraReady && (
-                            <div className="absolute inset-0 pointer-events-none">
-                                <div className="absolute inset-8 border-2 border-white/50 rounded-lg">
-                                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-20 border-2 border-green-400 rounded bg-green-400/10" />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Camera controls */}
-                        <div className="mt-4 flex gap-3">
-                            <button
-                                onClick={captureFromCamera}
-                                disabled={!cameraReady || processing}
-                                className="flex-1 py-4 bg-forest text-white font-bold rounded-xl hover:bg-forest/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-lg"
-                            >
-                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                {processing ? 'Processing...' : 'Capture Photo'}
-                            </button>
-                            <button
-                                onClick={stopCamera}
-                                className="px-4 py-4 bg-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-400 transition-all"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Upload mode */}
-                {mode === 'upload' && !previewImage && (
-                    <div className="space-y-4">
-                        {/* Upload option */}
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Scanned!</h2>
+                        <p className="text-3xl font-mono text-forest font-bold mb-8">{scanResult}</p>
                         <button
-                            onClick={triggerFileInput}
-                            className="w-full py-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-forest hover:bg-forest/5 transition-all group"
+                            onClick={() => { setScanResult(null); }}
+                            className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 px-8 rounded-lg"
                         >
-                            <div className="flex flex-col items-center gap-3">
-                                <div className="w-16 h-16 bg-forest/10 rounded-full flex items-center justify-center group-hover:bg-forest/20 transition-colors">
-                                    <svg className="w-8 h-8 text-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-lg font-bold text-gray-700">Upload Barcode Photo</p>
-                                    <p className="text-sm text-gray-500">Take a photo with your phone, then upload it</p>
-                                </div>
-                            </div>
+                            Scan Another
                         </button>
-
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                        />
-
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-300"></div>
-                            </div>
-                            <div className="relative flex justify-center">
-                                <span className="px-3 bg-gray-100 text-sm text-gray-500">or</span>
-                            </div>
-                        </div>
-
-                        {/* Camera option */}
-                        <button
-                            onClick={startCamera}
-                            className="w-full py-4 bg-white border-2 border-gray-300 rounded-xl hover:border-forest hover:bg-forest/5 transition-all flex items-center justify-center gap-3"
-                        >
-                            <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                            <span className="font-bold text-gray-700">Use Webcam</span>
-                        </button>
-                    </div>
-                )}
-
-                {/* Preview uploaded image */}
-                {mode === 'upload' && previewImage && (
-                    <div className="space-y-4">
-                        <div className="relative">
-                            <img
-                                src={previewImage}
-                                alt="Barcode preview"
-                                className="w-full rounded-xl"
-                            />
-                            {processing && (
-                                <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center">
-                                    <div className="bg-white rounded-xl px-6 py-4 flex items-center gap-3">
-                                        <div className="w-6 h-6 border-3 border-forest border-t-transparent rounded-full animate-spin" />
-                                        <span className="font-bold text-gray-700">Processing...</span>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {!processing && (
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => decodeImage(previewImage)}
-                                    className="flex-1 py-3 bg-forest text-white font-bold rounded-xl hover:bg-forest/90"
-                                >
-                                    Try Again
-                                </button>
-                                <button
-                                    onClick={clearPreview}
-                                    className="flex-1 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300"
-                                >
-                                    New Photo
-                                </button>
-                            </div>
-                        )}
                     </div>
                 )}
             </div>
 
-            {/* Error display */}
+            {/* Footer Controls */}
+            {isCameraReady && !scanResult && (
+                <div className="p-4 bg-gray-900 border-t border-gray-800 flex justify-center gap-4">
+                    <button
+                        onClick={captureAndScan}
+                        disabled={isProcessing}
+                        className={`
+                            flex-1 max-w-xs py-4 rounded-xl font-bold text-lg text-white shadow-lg transition-all
+                            flex items-center justify-center gap-2
+                            ${isProcessing ? 'bg-gray-600 cursor-wait' : 'bg-red-600 hover:bg-red-500 active:scale-95'}
+                        `}
+                    >
+                        {isProcessing ? (
+                            <>
+                                <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Processing...
+                            </>
+                        ) : (
+                            <>
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                                SNAP & SCAN
+                            </>
+                        )}
+                    </button>
+                </div>
+            )}
+
+            {/* Error Message */}
             {error && (
-                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                    <p className="text-sm text-red-700">{error}</p>
+                <div className="p-3 bg-red-100 text-red-700 text-center text-sm font-medium">
+                    {error}
                 </div>
             )}
-
-            {/* Debug info */}
-            {debugInfo && (
-                <p className="mt-2 text-xs text-gray-500 text-center">{debugInfo}</p>
-            )}
-
-            {/* Tips */}
-            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                <p className="text-sm text-amber-800 font-bold mb-2">📷 For best results:</p>
-                <ul className="text-xs text-amber-700 space-y-1 list-disc list-inside">
-                    <li>Take a <strong>close-up photo</strong> of the ISBN barcode</li>
-                    <li>Make sure the barcode is <strong>sharp and in focus</strong></li>
-                    <li>Ensure <strong>good lighting</strong> without glare</li>
-                    <li>The barcode should fill most of the photo</li>
-                </ul>
-            </div>
         </div>
     );
 };
