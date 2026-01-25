@@ -16,8 +16,8 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) 
     const [author, setAuthor] = useState(book.author);
     const [price, setPrice] = useState(book.list_price_cents ? (book.list_price_cents / 100).toFixed(2) : '');
     const [stock, setStock] = useState(book.stock?.toString() || '0');
-    const [condition, setCondition] = useState<BookCondition>(book.condition || 'New');
-    const [source, setSource] = useState<SupplySource>(book.supply_source || 'local');
+    const [condition, setCondition] = useState<BookCondition>((book.condition as BookCondition) || 'New');
+    const [source, setSource] = useState<SupplySource>((book.supply_source as SupplySource) || 'local');
     const [location, setLocation] = useState(book.location || '');
 
     // AI Analysis State
@@ -27,10 +27,11 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) 
     const handleAnalyze = async () => {
         setIsAnalyzing(true);
         try {
-            const response = await fetch('/api/ai/analyze', {
+            const response = await fetch('/api/ai', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    action: 'analyze',
                     type: 'analyze',
                     payload: {
                         title: title,

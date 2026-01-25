@@ -63,10 +63,10 @@ const AdminAnalysisPage: React.FC = () => {
     resetState();
 
     try {
-      const response = await fetch('/api/ai/analyze', {
+      const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'identify', payload: { query: newBookQuery } })
+        body: JSON.stringify({ action: 'analyze', type: 'identify', payload: { query: newBookQuery } })
       });
 
       if (!response.ok) throw new Error('Failed to identify book');
@@ -112,10 +112,10 @@ const AdminAnalysisPage: React.FC = () => {
     setNeedsConfirmation(false);
 
     try {
-      const response = await fetch('/api/ai/analyze', {
+      const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'analyze', payload: bookToAnalyze })
+        body: JSON.stringify({ action: 'analyze', type: 'analyze', payload: bookToAnalyze })
       });
 
       if (!response.ok) throw new Error('Failed to analyze book');

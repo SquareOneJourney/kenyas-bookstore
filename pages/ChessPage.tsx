@@ -67,10 +67,11 @@ const ChessPage: React.FC = () => {
     const maxRetries = 3;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        const response = await fetch('/api/ai/chess', {
+        const response = await fetch('/api/ai', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            action: 'chess',
             type: 'reaction',
             pgn: game.pgn(),
             userMove: userMoveSan,
@@ -108,10 +109,11 @@ const ChessPage: React.FC = () => {
     const maxRetries = 3;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        const response = await fetch('/api/ai/chess', {
+        const response = await fetch('/api/ai', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            action: 'chess',
             type: 'move',
             pgn: game.pgn(),
             difficultyPrompt: getDifficultyPrompt()

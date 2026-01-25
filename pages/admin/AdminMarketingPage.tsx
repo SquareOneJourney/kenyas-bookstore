@@ -29,10 +29,11 @@ const AdminMarketingPage: React.FC = () => {
         try {
             const selectedData = books.filter(b => selectedBooks.includes(b.id));
 
-            const response = await fetch('/api/ai/bundle', {
+            const response = await fetch('/api/ai', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    action: 'bundle',
                     books: selectedData.map(b => ({ title: b.title, author: b.author, genre: b.genre }))
                 })
             });

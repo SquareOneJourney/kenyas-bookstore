@@ -36,12 +36,12 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
 
             // Call our own serverless API
             // This allows us to use the secure GEMINI_API_KEY on the server
-            const response = await fetch('/api/ai/scan', {
+            const response = await fetch('/api/ai', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ image: base64Data }),
+                body: JSON.stringify({ action: 'scan', image: base64Data }),
             });
 
             if (!response.ok) return null;

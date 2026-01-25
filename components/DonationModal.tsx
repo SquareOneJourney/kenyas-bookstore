@@ -27,10 +27,11 @@ const DonationModal: React.FC<{
       try {
         const libraryForPrompt = allBooks.map(({ title, author, genre, description }) => ({ title, author, genre, description }));
 
-        const response = await fetch('/api/ai/donation', {
+        const response = await fetch('/api/ai', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            action: 'donation',
             type: 'recommendations',
             wish: { age: wish.age, interests: wish.interests, theme: wish.theme },
             library: libraryForPrompt
@@ -62,10 +63,11 @@ const DonationModal: React.FC<{
     if (!selectedBook) return;
     setIsSuggesting(true);
     try {
-      const response = await fetch('/api/ai/donation', {
+      const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'donation',
           type: 'note',
           wish: { age: wish.age, interests: wish.interests, theme: wish.theme },
           selectedBook: { title: selectedBook.title }

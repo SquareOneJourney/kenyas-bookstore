@@ -33,10 +33,10 @@ export const checkConnections = async () => {
         } else {
             // Actually try to generate a tiny string via API
             try {
-                const response = await fetch('/api/ai/analyze', {
+                const response = await fetch('/api/ai', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'identify', payload: { query: 'Hello' } })
+                    body: JSON.stringify({ action: 'analyze', type: 'identify', payload: { query: 'Hello' } })
                 });
 
                 if (response.ok) {

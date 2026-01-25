@@ -71,10 +71,11 @@ const ChatBot: React.FC = () => {
                 })
                 .join('\n');
 
-            const response = await fetch('/api/ai/chat', {
+            const response = await fetch('/api/ai', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    action: 'chat',
                     message: userMsg,
                     catalogContext
                 })

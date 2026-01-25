@@ -118,10 +118,11 @@ const GiftFinderPage: React.FC = () => {
       }
 
       // Call server-side API instead of direct Gemini
-      const response = await fetch('/api/ai/gift-finder', {
+      const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'gift-finder',
           catalog: catalogForPrompt,
           user_preferences,
           web_context_ok: webContextOk

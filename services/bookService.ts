@@ -92,10 +92,10 @@ export const BookService = {
    */
   async enrichBookData(partialBook: Partial<Book>): Promise<Partial<Book>> {
     try {
-      const response = await fetch('/api/ai/analyze', {
+      const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'enrich', payload: partialBook })
+        body: JSON.stringify({ action: 'analyze', type: 'enrich', payload: partialBook })
       });
 
       if (!response.ok) throw new Error('AI Enrichment failed');
