@@ -128,7 +128,7 @@ export async function getBookById(id: string): Promise<BookRow | null> {
  * @param book - Book row
  * @returns Availability message (never null)
  */
-export function getAvailabilityMessage(book: BookRow): string {
+export function getAvailabilityMessage(book: Partial<BookRow>): string {
   return book.availability_message ?? 'Available for order';
 }
 

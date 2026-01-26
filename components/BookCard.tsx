@@ -70,14 +70,14 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
           <img
             src={book.cover_url || '/placeholder-book.png'}
             alt={`Cover of ${book.title} by ${book.author || 'Unknown Author'}`}
-            className="w-full h-80 sm:h-96 object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            className="w-full h-64 object-contain bg-gray-50 transition-transform duration-300 group-hover:scale-[1.02] p-2"
             loading="lazy"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+
           {/* Format badge */}
           {book.format && (
-            <div className="absolute top-3 right-3 bg-midnight/85 backdrop-blur-sm text-ecru text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
+            <div className="absolute top-2 right-2 bg-midnight/85 backdrop-blur-sm text-ecru text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shadow-sm">
               {book.format}
             </div>
           )}
@@ -85,7 +85,7 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
           {/* Wishlist button */}
           <button
             onClick={handleWishlistToggle}
-            className="absolute bottom-3 right-3 bg-ecru/90 backdrop-blur-sm p-2 rounded-full shadow-md hover:bg-ecru transition-colors opacity-0 group-hover:opacity-100"
+            className="absolute bottom-2 right-2 bg-ecru/90 backdrop-blur-sm p-1.5 rounded-full shadow-md hover:bg-ecru transition-colors opacity-0 group-hover:opacity-100"
             aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
             title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
           >
@@ -93,12 +93,12 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
           </button>
         </div>
 
-        <div className="p-4 space-y-2">
+        <div className="p-3 space-y-1.5">
           <div>
-            <h3 className="font-serif text-lg font-semibold text-ink line-clamp-2 min-h-[3.5rem] group-hover:text-oxblood transition-colors">
+            <h3 className="font-serif text-base font-semibold text-ink line-clamp-2 min-h-[3rem] group-hover:text-oxblood transition-colors leading-tight">
               {book.title}
             </h3>
-            <p className="text-sm text-ink/70 mt-1 line-clamp-1">by {book.author}</p>
+            <p className="text-xs text-ink/70 mt-1 line-clamp-1">by {book.author}</p>
           </div>
 
           {/* Rating - placeholder for future reviews */}
@@ -109,20 +109,20 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
                   <StarIcon key={star} filled={star <= Math.round(rating)} />
                 ))}
               </div>
-              <span className="text-xs text-ink/60 ml-1">({reviewCount})</span>
+              <span className="text-[10px] text-ink/60 ml-1">({reviewCount})</span>
             </div>
           ) : (
-            <div className="text-xs text-ink/50 italic">No reviews yet</div>
+            <div className="text-[10px] text-ink/50 italic h-4"></div>
           )}
 
           {/* Availability message */}
-          <p className="text-xs text-ink/60">
+          <p className="text-[10px] text-ink/60">
             {getAvailabilityMessage(book)}
           </p>
 
-          <div className="flex items-center justify-between pt-3 border-t border-ink/10">
+          <div className="flex items-center justify-between pt-2 border-t border-ink/10 gap-2">
             <div>
-              <p className="text-xl font-semibold text-oxblood">
+              <p className="text-lg font-semibold text-oxblood">
                 {formatMoneyFromCents(book.list_price_cents, book.currency || 'USD')}
               </p>
             </div>
@@ -131,9 +131,10 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
               size="sm"
               onClick={handleAddToCart}
               disabled={isAddingToCart}
-              className="min-w-[104px]"
+              className="px-3 py-1.5 text-xs sm:text-sm flex-1 sm:flex-none whitespace-nowrap"
             >
-              {isAddingToCart ? 'Adding...' : 'Add to Cart'}
+              {isAddingToCart ? '...' : <span className="sm:hidden">Add</span>}
+              <span className="hidden sm:inline">{isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
             </Button>
           </div>
         </div>

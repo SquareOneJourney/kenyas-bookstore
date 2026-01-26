@@ -138,10 +138,10 @@ const HomePage: React.FC = () => {
               <Link
                 key={category.name}
                 to={`/catalog?genre=${encodeURIComponent(category.name)}`}
-                className="category-tile rounded-2xl p-5 md:p-6 text-left hover:-translate-y-1 transition-all group bg-white shadow-sm hover:shadow-md"
+                className="category-tile rounded-2xl p-4 md:p-6 text-left hover:-translate-y-1 transition-all group bg-white shadow-sm hover:shadow-md"
               >
-                <div className="text-xs uppercase tracking-[0.14em] text-oxblood mb-2">{category.note}</div>
-                <h3 className="font-serif text-xl font-semibold text-ink group-hover:text-oxblood transition-colors">
+                <div className="text-[10px] md:text-xs uppercase tracking-[0.14em] text-oxblood mb-2 truncate">{category.note}</div>
+                <h3 className="font-serif text-lg md:text-xl font-semibold text-ink group-hover:text-oxblood transition-colors">
                   {category.name}
                 </h3>
               </Link>

@@ -23,9 +23,9 @@ const ChevronRightIcon = () => (
   </svg>
 );
 
-const BookCarousel: React.FC<BookCarouselProps> = ({ 
-  title, 
-  books, 
+const BookCarousel: React.FC<BookCarouselProps> = ({
+  title,
+  books,
   viewAllLink = '/catalog',
   showViewAll = true,
   variant = 'default'
@@ -81,7 +81,7 @@ const BookCarousel: React.FC<BookCarouselProps> = ({
           </Link>
         )}
       </div>
-      
+
       {books.length === 0 ? (
         <div className={`text-center py-12 rounded-2xl border border-dashed ${placeholderBg}`}>
           <p className={placeholderText}>Coming soon - {title.toLowerCase()} will appear here</p>
@@ -106,7 +106,7 @@ const BookCarousel: React.FC<BookCarouselProps> = ({
             className="flex gap-8 overflow-x-auto scrollbar-hide pb-4 scroll-smooth px-1"
           >
             {books.map((book) => (
-              <div key={book.id} className="flex-shrink-0 w-52">
+              <div key={book.id} className="flex-shrink-0 w-44">
                 <BookCard book={book} />
               </div>
             ))}

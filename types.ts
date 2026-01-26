@@ -36,6 +36,7 @@ export type Book = {
   is_active?: boolean | null;
   created_at?: string | null;
   updated_at?: string | null;
+  format?: string | null;
 };
 
 /**

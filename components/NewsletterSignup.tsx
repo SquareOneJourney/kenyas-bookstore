@@ -16,7 +16,7 @@ const NewsletterSignup: React.FC = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-forest to-deep-blue text-cream rounded-lg shadow-xl p-8 md:p-12 my-12">
+    <div className="bg-gradient-to-r from-forest to-deep-blue text-cream rounded-lg shadow-xl p-6 md:p-12 my-12">
       <div className="max-w-2xl mx-auto text-center">
         <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4">
           Stay in the Loop
@@ -30,17 +30,17 @@ const NewsletterSignup: React.FC = () => {
           </div>
         ) : (
           <div className="flex justify-center">
-            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 items-center">
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 items-center w-full sm:w-auto">
               <Input
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="sm:w-64 bg-white/10 border-cream/30 text-cream placeholder-cream/70 focus:bg-white/20"
+                className="w-full sm:w-64 bg-white/10 border-cream/30 text-cream placeholder-cream/70 focus:bg-white/20"
                 id="newsletter-email"
               />
-              <Button type="submit" variant="secondary" size="lg" className="whitespace-nowrap">
+              <Button type="submit" variant="secondary" size="lg" className="w-full sm:w-auto whitespace-nowrap">
                 Subscribe
               </Button>
             </form>
