@@ -14,7 +14,11 @@ interface EditBookModalProps {
 const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) => {
     const [title, setTitle] = useState(book.title);
     const [author, setAuthor] = useState(book.author);
-    const [price, setPrice] = useState(book.list_price_cents ? (book.list_price_cents / 100).toFixed(2) : '');
+    const [price, setPrice] = useState(
+        book.list_price_cents
+            ? (book.list_price_cents / 100).toFixed(2)
+            : (book.price ? book.price.toFixed(2) : '')
+    );
     const [stock, setStock] = useState(book.stock?.toString() || '0');
     const [condition, setCondition] = useState<BookCondition>((book.condition as BookCondition) || 'New');
     const [source, setSource] = useState<SupplySource>((book.supply_source as SupplySource) || 'local');

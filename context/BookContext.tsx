@@ -38,7 +38,12 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.error("Error fetching books:", error);
         setBooks([]);
       } else {
-        setBooks(data ?? []);
+        // Transform DB shape to App shape (populate list_price_cents)
+        const mappedBooks = (data ?? []).map(b => ({
+          ...b,
+          list_price_cents: b.price ? Math.round(b.price * 100) : null
+        }));
+        setBooks(mappedBooks);
       }
       setLoading(false);
     };
