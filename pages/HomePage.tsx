@@ -24,9 +24,22 @@ const HomePage: React.FC = () => {
     const fetchBooks = async () => {
       setLoading(true);
       const allBooks = await getBooks();
+
+      // Filter for featured books first
+      const featuredBooks = allBooks.filter(b => b.is_featured);
+
       // Shuffle and slice for variety
       const shuffled = [...allBooks].sort(() => 0.5 - Math.random());
-      setFeatured(shuffled.slice(0, 1)); // Featured book
+
+      // Use explicit featured book if available, otherwise random
+      if (featuredBooks.length > 0) {
+        // Pick a random featured book if multiple
+        const randomFeatured = featuredBooks[Math.floor(Math.random() * featuredBooks.length)];
+        setFeatured([randomFeatured]);
+      } else {
+        setFeatured(shuffled.slice(0, 1));
+      }
+
       setNewReleases(shuffled.slice(0, 4));
       setBestsellers(shuffled.slice(4, 8));
       setPicks(shuffled.slice(8, 12));
