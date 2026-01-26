@@ -205,14 +205,9 @@ const BookDetailPage: React.FC = () => {
             <div className="mt-auto border-t pt-6 space-y-4">
               <div className="flex items-baseline justify-between">
                 <div>
-                  <p className="text-4xl font-bold text-forest">
-                    {formatMoneyFromCents(book.list_price_cents, book.currency || 'USD')}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {getAvailabilityMessage(book)}
-                  </p>
+                  {/* Price moved to top */}
                   {book.estimated_arrival_date && (
-                    <p className="text-sm text-gray-600 mt-2 font-medium">
+                    <p className="text-sm text-gray-600 mb-4 font-medium">
                       📦 Estimated arrival: {new Date(book.estimated_arrival_date).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'long',

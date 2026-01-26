@@ -120,8 +120,8 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
             {getAvailabilityMessage(book)}
           </p>
 
-          <div className="flex items-center justify-between pt-2 border-t border-ink/10 gap-2">
-            <div>
+          <div className="pt-2 border-t border-ink/10">
+            <div className="flex items-center justify-between mb-2">
               <p className="text-lg font-semibold text-oxblood">
                 {formatMoneyFromCents(book.list_price_cents, book.currency || 'USD')}
               </p>
@@ -131,10 +131,9 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
               size="sm"
               onClick={handleAddToCart}
               disabled={isAddingToCart}
-              className="px-3 py-1.5 text-xs sm:text-sm flex-1 sm:flex-none whitespace-nowrap"
+              className="w-full text-xs sm:text-xs py-1.5 h-8"
             >
-              {isAddingToCart ? '...' : <span className="sm:hidden">Add</span>}
-              <span className="hidden sm:inline">{isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
+              {isAddingToCart ? 'Adding...' : 'Add to Cart'}
             </Button>
           </div>
         </div>
