@@ -10,7 +10,7 @@ export const useBooks = () => {
     throw new Error('useBooks must be used within a BookProvider');
   }
 
-  const { books, addBooks, updateBook } = context;
+  const { books, addBooks, updateBook, deleteBook } = context;
 
   const getBooks = useCallback((): Promise<Book[]> => {
     // Return a promise to maintain the existing async interface used by components
@@ -26,5 +26,5 @@ export const useBooks = () => {
     return Promise.resolve(recommended);
   }, [books]);
 
-  return { getBooks, getBookById, getRecommendedBooks, addBooks, updateBook };
+  return { getBooks, getBookById, getRecommendedBooks, addBooks, updateBook, deleteBook };
 };

@@ -10,6 +10,7 @@ interface EditBookModalProps {
     book: Book;
     onClose: () => void;
     onSave: (id: string, updates: Partial<Book>) => void;
+    onDelete: (id: string) => void;
 }
 
 const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) => {
@@ -25,6 +26,7 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) 
     const [source, setSource] = useState<SupplySource>((book.supply_source as SupplySource) || 'local');
     const [location, setLocation] = useState(book.location || '');
     const [coverUrl, setCoverUrl] = useState(book.cover_url || '');
+    const [isActive, setIsActive] = useState(book.is_active ?? true); // Default to true if undefined
 
     // AI Analysis State
     const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -104,7 +106,8 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) 
             condition,
             supply_source: source,
             location,
-            cover_url: coverUrl
+            cover_url: coverUrl,
+            is_active: isActive
         });
         onClose();
     };
@@ -135,6 +138,19 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) 
                         <div className="grow space-y-4">
                             <Input label="Title" value={title} onChange={e => setTitle(e.target.value)} />
                             <Input label="Author" value={author} onChange={e => setAuthor(e.target.value)} />
+                            <div className="flex gap-4">
+                                <div className="w-1/2">
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Status</label>
+                                    <select
+                                        value={isActive ? 'active' : 'archived'}
+                                        onChange={(e) => setIsActive(e.target.value === 'active')}
+                                        className={`w-full p-3 rounded-xl border font-bold ${isActive ? 'bg-green-50 border-green-200 text-green-700' : 'bg-gray-100 border-gray-200 text-gray-500'}`}
+                                    >
+                                        <option value="active">Active (Visible)</option>
+                                        <option value="archived">Archived (Hidden)</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
