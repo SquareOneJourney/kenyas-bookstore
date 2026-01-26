@@ -13,7 +13,7 @@ interface EditBookModalProps {
     onDelete: (id: string) => void;
 }
 
-const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) => {
+const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave, onDelete }) => {
     const [title, setTitle] = useState(book.title);
     const [author, setAuthor] = useState(book.author);
     const [price, setPrice] = useState(
@@ -112,8 +112,16 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) 
         onClose();
     };
 
+    const handleDelete = () => {
+        if (confirm("Are you sure you want to permanently delete this book? This cannot be undone.")) {
+            onDelete(book.id);
+            onClose();
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            {/* ... wrapper div ... */}
             <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                     <h2 className="text-2xl font-serif font-bold text-deep-blue">Edit Inventory</h2>
@@ -125,6 +133,7 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) 
                 </div>
 
                 <div className="p-8 max-h-[70vh] overflow-y-auto">
+                    {/* ... form content ... */}
                     <div className="flex gap-6 mb-8">
                         <div className="w-24 shrink-0 relative group">
                             <img src={coverUrl} alt={title} className="w-full rounded-lg shadow-md aspect-[2/3] object-cover" />
@@ -217,9 +226,17 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) 
                     )}
                 </div>
 
-                <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-3">
-                    <button onClick={onClose} className="px-6 py-3 rounded-full font-bold text-gray-500 hover:text-gray-700 transition-colors">Cancel</button>
-                    <Button onClick={handleSave} className="shadow-lg shadow-forest/20">Save Changes</Button>
+                <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-between gap-3">
+                    <button
+                        onClick={handleDelete}
+                        className="px-6 py-3 rounded-full font-bold text-rose-500 hover:bg-rose-50 transition-colors"
+                    >
+                        Delete Book
+                    </button>
+                    <div className="flex gap-3">
+                        <button onClick={onClose} className="px-6 py-3 rounded-full font-bold text-gray-500 hover:text-gray-700 transition-colors">Cancel</button>
+                        <Button onClick={handleSave} className="shadow-lg shadow-forest/20">Save Changes</Button>
+                    </div>
                 </div>
             </div>
             {showCoverSearch && (
