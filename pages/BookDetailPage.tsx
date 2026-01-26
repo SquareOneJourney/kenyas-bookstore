@@ -106,144 +106,153 @@ const BookDetailPage: React.FC = () => {
       />
       <div className="bg-white p-6 md:p-8 rounded-lg shadow-lg">
         <div className="flex flex-col lg:flex-row gap-8">
-            <div className="lg:w-2/5 xl:w-1/3 flex-shrink-0">
-                <ImageZoom
-                  src={book.cover_url || '/placeholder-book.png'}
-                  alt={`Cover of ${book.title} by ${book.author || 'Unknown Author'}`}
-                  className="w-full h-auto object-cover rounded-md shadow-xl"
-                />
+          <div className="lg:w-2/5 xl:w-1/3 flex-shrink-0">
+            <ImageZoom
+              src={book.cover_url || '/placeholder-book.png'}
+              alt={`Cover of ${book.title} by ${book.author || 'Unknown Author'}`}
+              className="w-full h-auto object-cover rounded-md shadow-xl"
+            />
+          </div>
+          <div className="lg:w-3/5 xl:w-2/3 flex flex-col">
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex-1">
+                <h1 className="font-serif text-3xl md:text-4xl font-bold text-deep-blue mb-2 leading-tight">
+                  {book.title}
+                </h1>
+                <p className="text-lg md:text-xl text-gray-700 mb-3">by {book.author || 'Unknown Author'}</p>
+                <div className="flex items-center gap-3 mb-4">
+                  {book.format && (
+                    <span className="bg-forest text-cream text-xs font-bold px-3 py-1 rounded-md uppercase tracking-wider">
+                      {book.format}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={toggleWishlist}
+                className="p-3 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
+                title={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+                aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+              >
+                <HeartIcon filled={inWishlist} />
+              </button>
             </div>
-            <div className="lg:w-3/5 xl:w-2/3 flex flex-col">
-                <div className="flex justify-between items-start mb-4">
-                    <div className="flex-1">
-                        <h1 className="font-serif text-3xl md:text-4xl font-bold text-deep-blue mb-2 leading-tight">
-                          {book.title}
-                        </h1>
-                        <p className="text-lg md:text-xl text-gray-700 mb-3">by {book.author || 'Unknown Author'}</p>
-                        <div className="flex items-center gap-3 mb-4">
-                          {book.format && (
-                            <span className="bg-forest text-cream text-xs font-bold px-3 py-1 rounded-md uppercase tracking-wider">
-                              {book.format}
-                            </span>
-                          )}
-                        </div>
-                    </div>
-                    <button 
-                        onClick={toggleWishlist}
-                        className="p-3 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
-                        title={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
-                        aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
-                    >
-                        <HeartIcon filled={inWishlist} />
-                    </button>
-                </div>
-                
-                <div className="flex flex-wrap gap-2 text-gray-500 text-sm mb-6">
-                    {book.isbn13 && <span className="bg-gray-100 px-2 py-1 rounded">ISBN-13: {book.isbn13}</span>}
-                    {book.isbn10 && <span className="bg-gray-100 px-2 py-1 rounded">ISBN-10: {book.isbn10}</span>}
-                </div>
-                
-                <div className="mb-6">
-                  <p className="text-gray-800 leading-relaxed text-base mb-6">{book.description || 'No description available.'}</p>
-                  <SocialShare title={book.title} url={currentUrl} description={book.description || ''} />
-                </div>
-                
-                {/* Details Section - Technical Metadata */}
-                {(book.publisher || book.publication_date || book.page_count || book.isbn13 || book.isbn10) && (
-                  <div className="mb-8 p-4 bg-gray-50 rounded-lg">
-                    <h3 className="text-lg font-semibold text-deep-blue mb-4 border-b pb-2">Details</h3>
-                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                      {book.publisher && (
-                        <div>
-                          <dt className="text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">Publisher</dt>
-                          <dd className="font-medium text-deep-blue">{book.publisher}</dd>
-                        </div>
-                      )}
-                      {book.publication_date && (
-                        <div>
-                          <dt className="text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">Publication Date</dt>
-                          <dd className="font-medium text-deep-blue">
-                            {new Date(book.publication_date).toLocaleDateString('en-US', { 
-                              year: 'numeric', 
-                              month: 'long', 
-                              day: 'numeric' 
-                            })}
-                          </dd>
-                        </div>
-                      )}
-                      {book.page_count && (
-                        <div>
-                          <dt className="text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">Page Count</dt>
-                          <dd className="font-medium text-deep-blue">{book.page_count}</dd>
-                        </div>
-                      )}
-                      {book.isbn13 && (
-                        <div>
-                          <dt className="text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">ISBN-13</dt>
-                          <dd className="font-medium text-deep-blue font-mono">{book.isbn13}</dd>
-                        </div>
-                      )}
-                      {book.isbn10 && (
-                        <div>
-                          <dt className="text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">ISBN-10</dt>
-                          <dd className="font-medium text-deep-blue font-mono">{book.isbn10}</dd>
-                        </div>
-                      )}
-                    </dl>
-                  </div>
-                )}
 
-                <div className="mt-auto border-t pt-6 space-y-4">
-                  <div className="flex items-baseline justify-between">
-                    <div>
-                      <p className="text-4xl font-bold text-forest">
-                        {formatMoneyFromCents(book.list_price_cents, book.currency || 'USD')}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {getAvailabilityMessage(book)}
-                      </p>
-                      {book.estimated_arrival_date && (
-                        <p className="text-sm text-gray-600 mt-2 font-medium">
-                          📦 Estimated arrival: {new Date(book.estimated_arrival_date).toLocaleDateString('en-US', { 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          })}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button 
-                      size="lg" 
-                      onClick={handleAddToCart}
-                      disabled={isAddingToCart}
-                      className="flex-1 min-h-[48px]"
-                    >
-                      {isAddingToCart ? 'Adding to Cart...' : 'Add to Cart'}
-                    </Button>
-                    <Link to="/cart" className="flex-1">
-                      <Button variant="outline" size="lg" className="w-full min-h-[48px]">
-                        View Cart
-                      </Button>
-                    </Link>
-                  </div>
-                  <div className="bg-cream/50 p-4 rounded-md text-sm text-gray-700">
-                    <p className="font-semibold mb-1">🛡️ Secure Checkout</p>
-                    <p>Free shipping on orders over $25 • Easy returns within 30 days</p>
-                  </div>
-                </div>
+            <div className="mb-6">
+              <p className="text-3xl font-bold text-forest mb-2">
+                {formatMoneyFromCents(book.list_price_cents, book.currency || 'USD')}
+              </p>
+              <p className="text-sm text-gray-500">
+                {getAvailabilityMessage(book)}
+              </p>
             </div>
+
+            <div className="flex flex-wrap gap-2 text-gray-500 text-sm mb-6">
+              {book.isbn13 && <span className="bg-gray-100 px-2 py-1 rounded">ISBN-13: {book.isbn13}</span>}
+              {book.isbn10 && <span className="bg-gray-100 px-2 py-1 rounded">ISBN-10: {book.isbn10}</span>}
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-800 leading-relaxed text-base mb-6">{book.description || 'No description available.'}</p>
+              <SocialShare title={book.title} url={currentUrl} description={book.description || ''} />
+            </div>
+
+            {/* Details Section - Technical Metadata */}
+            {(book.publisher || book.publication_date || book.page_count || book.isbn13 || book.isbn10) && (
+              <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+                <h3 className="text-lg font-semibold text-deep-blue mb-4 border-b pb-2">Details</h3>
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                  {book.publisher && (
+                    <div>
+                      <dt className="text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">Publisher</dt>
+                      <dd className="font-medium text-deep-blue">{book.publisher}</dd>
+                    </div>
+                  )}
+                  {book.publication_date && (
+                    <div>
+                      <dt className="text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">Publication Date</dt>
+                      <dd className="font-medium text-deep-blue">
+                        {new Date(book.publication_date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </dd>
+                    </div>
+                  )}
+                  {book.page_count && (
+                    <div>
+                      <dt className="text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">Page Count</dt>
+                      <dd className="font-medium text-deep-blue">{book.page_count}</dd>
+                    </div>
+                  )}
+                  {book.isbn13 && (
+                    <div>
+                      <dt className="text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">ISBN-13</dt>
+                      <dd className="font-medium text-deep-blue font-mono">{book.isbn13}</dd>
+                    </div>
+                  )}
+                  {book.isbn10 && (
+                    <div>
+                      <dt className="text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">ISBN-10</dt>
+                      <dd className="font-medium text-deep-blue font-mono">{book.isbn10}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            )}
+
+            <div className="mt-auto border-t pt-6 space-y-4">
+              <div className="flex items-baseline justify-between">
+                <div>
+                  <p className="text-4xl font-bold text-forest">
+                    {formatMoneyFromCents(book.list_price_cents, book.currency || 'USD')}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {getAvailabilityMessage(book)}
+                  </p>
+                  {book.estimated_arrival_date && (
+                    <p className="text-sm text-gray-600 mt-2 font-medium">
+                      📦 Estimated arrival: {new Date(book.estimated_arrival_date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  size="lg"
+                  onClick={handleAddToCart}
+                  disabled={isAddingToCart}
+                  className="flex-1 min-h-[48px]"
+                >
+                  {isAddingToCart ? 'Adding to Cart...' : 'Add to Cart'}
+                </Button>
+                <Link to="/cart" className="flex-1">
+                  <Button variant="outline" size="lg" className="w-full min-h-[48px]">
+                    View Cart
+                  </Button>
+                </Link>
+              </div>
+              <div className="bg-cream/50 p-4 rounded-md text-sm text-gray-700">
+                <p className="font-semibold mb-1">🛡️ Secure Checkout</p>
+                <p>Free shipping on orders over $25 • Easy returns within 30 days</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {recommended.length > 0 && (
-          <div className="mt-16">
-              <h2 className="font-serif text-3xl font-bold text-deep-blue mb-6 border-b-2 border-accent pb-2">You Might Also Like</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {recommended.map(recBook => <BookCard key={recBook.id} book={recBook} />)}
-              </div>
+        <div className="mt-16">
+          <h2 className="font-serif text-3xl font-bold text-deep-blue mb-6 border-b-2 border-accent pb-2">You Might Also Like</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {recommended.map(recBook => <BookCard key={recBook.id} book={recBook} />)}
           </div>
+        </div>
       )}
     </div>
   );

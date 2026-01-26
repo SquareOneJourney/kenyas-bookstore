@@ -37,6 +37,9 @@ export type Book = {
   created_at?: string | null;
   updated_at?: string | null;
   format?: string | null;
+  publisher?: string | null;
+  publication_date?: string | null;
+  page_count?: number | null;
 };
 
 /**
