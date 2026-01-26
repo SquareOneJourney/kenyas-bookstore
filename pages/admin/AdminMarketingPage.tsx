@@ -6,7 +6,7 @@ import Button from '../../components/ui/Button';
 import { formatMoneyFromCents } from '../../lib/money';
 
 const AdminMarketingPage: React.FC = () => {
-    const { getBooks } = useBooks();
+    const { getBooks, addBooks } = useBooks();
     const [books, setBooks] = useState<Book[]>([]);
     const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
     const [generatedBundle, setGeneratedBundle] = useState<{ name: string, description: string, price_cents: number } | null>(null);
@@ -57,6 +57,38 @@ const AdminMarketingPage: React.FC = () => {
             console.error(e);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleCreateBundle = async () => {
+        if (!generatedBundle) return;
+
+        const newBundle: Book = {
+            id: self.crypto.randomUUID(),
+            title: generatedBundle.name,
+            author: "Kenya's Bookstore Bundles", // Virtual Author
+            description: generatedBundle.description,
+            isbn13: null,
+            isbn10: null,
+            list_price_cents: generatedBundle.price_cents,
+            stock: 99, // Virtual stock for now
+            condition: 'New',
+            supply_source: 'bundle', // Mark as bundle
+            tags: ['Bundle', ...selectedBooks], // Store component IDs in tags for reference
+            cover_url: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=1000', // Generic Bundle Image
+            is_active: true,
+            created_at: new Date().toISOString(),
+            genre: "Book Bundle"
+        };
+
+        try {
+            await addBooks([newBundle]);
+            alert(`Bundle "${generatedBundle.name}" created successfully! Check the Library.`);
+            setGeneratedBundle(null);
+            setSelectedBooks([]);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to create bundle.");
         }
     };
 
@@ -114,7 +146,10 @@ const AdminMarketingPage: React.FC = () => {
                                         {formatMoneyFromCents(generatedBundle.price_cents)}
                                     </span>
                                 </div>
-                                <button className="w-full mt-4 py-2 bg-green-700 hover:bg-green-600 rounded text-sm font-bold">
+                                <button
+                                    onClick={handleCreateBundle}
+                                    className="w-full mt-4 py-2 bg-green-700 hover:bg-green-600 rounded text-sm font-bold transition-colors shadow-lg"
+                                >
                                     Create Product & Publish
                                 </button>
                             </div>
