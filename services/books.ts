@@ -78,7 +78,8 @@ export async function listActiveBooks(options: ListBooksOptions = {}): Promise<B
       return [];
     }
 
-    return data || [];
+    // Normalize price data (map DB 'price' to 'list_price_cents')
+    return (data || []).map(mapDbBookToAppBook);
   } catch (error) {
     console.error('Exception fetching books:', error);
     return [];
@@ -115,11 +116,29 @@ export async function getBookById(id: string): Promise<BookRow | null> {
       return null;
     }
 
-    return data;
+    return mapDbBookToAppBook(data);
   } catch (error) {
     console.error('Exception fetching book:', error);
     return null;
   }
+}
+
+/**
+ * Helper to map DB book row to App book type
+ * Ensures list_price_cents is populated from price column
+ */
+function mapDbBookToAppBook(row: any): BookRow {
+  if (!row) return row;
+
+  // If list_price_cents is missing but price exists, calculate it
+  if ((row.list_price_cents === null || row.list_price_cents === undefined) && row.price !== null && row.price !== undefined) {
+    return {
+      ...row,
+      list_price_cents: Math.round(row.price * 100)
+    };
+  }
+
+  return row;
 }
 
 /**
