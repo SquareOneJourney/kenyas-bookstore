@@ -40,6 +40,7 @@ export type Book = {
   publisher?: string | null;
   publication_date?: string | null;
   page_count?: number | null;
+  is_featured?: boolean | null;
 };
 
 /**
