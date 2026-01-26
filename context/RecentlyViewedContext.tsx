@@ -33,21 +33,27 @@ export const RecentlyViewedProvider: React.FC<{ children: ReactNode }> = ({ chil
     }
   }, [recentlyViewed]);
 
-  const addToRecentlyViewed = (book: Book) => {
+  const addToRecentlyViewed = React.useCallback((book: Book) => {
     setRecentlyViewed((prev) => {
       // Remove if already exists, then add to front
       const filtered = prev.filter((b) => b.id !== book.id);
       return [book, ...filtered].slice(0, MAX_ITEMS);
     });
-  };
+  }, []);
 
-  const clearRecentlyViewed = () => {
+  const clearRecentlyViewed = React.useCallback(() => {
     setRecentlyViewed([]);
     localStorage.removeItem(STORAGE_KEY);
-  };
+  }, []);
+
+  const value = React.useMemo(() => ({
+    recentlyViewed,
+    addToRecentlyViewed,
+    clearRecentlyViewed
+  }), [recentlyViewed, addToRecentlyViewed, clearRecentlyViewed]);
 
   return (
-    <RecentlyViewedContext.Provider value={{ recentlyViewed, addToRecentlyViewed, clearRecentlyViewed }}>
+    <RecentlyViewedContext.Provider value={value}>
       {children}
     </RecentlyViewedContext.Provider>
   );
