@@ -6,7 +6,7 @@ import Button from '../../components/ui/Button';
 import { formatMoneyFromCents } from '../../lib/money';
 
 const AdminMarketingPage: React.FC = () => {
-    const { getBooks, addBooks, updateBook } = useBooks(); // Added updateBook
+    const { getBooks, addBooks, updateBook, deleteBook } = useBooks(); // Added updateBook
     const [books, setBooks] = useState<Book[]>([]);
     const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
     const [generatedBundle, setGeneratedBundle] = useState<{ name: string, description: string, price_cents: number } | null>(null);
@@ -217,6 +217,47 @@ const AdminMarketingPage: React.FC = () => {
                                     Create Product & Publish
                                 </button>
                             </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* MANAGE ACTIVE BUNDLES */}
+                <div className="bg-white rounded-lg shadow-md p-6 h-fit mt-8">
+                    <h2 className="text-xl font-bold mb-4">Your Bundles</h2>
+                    <div className="space-y-4">
+                        {books.filter(b => b.genre === 'Book Bundle').length === 0 ? (
+                            <p className="text-sm text-gray-500 italic">No bundles create yet.</p>
+                        ) : (
+                            books.filter(b => b.genre === 'Book Bundle').map(bundle => (
+                                <div key={bundle.id} className="p-3 border rounded-lg bg-gray-50">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="font-bold text-deep-blue text-sm">{bundle.title}</h3>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${bundle.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>
+                                            {bundle.is_active ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mb-3">{formatMoneyFromCents(bundle.list_price_cents ?? 0)}</p>
+
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => updateBook && updateBook(bundle.id, { is_active: !bundle.is_active })}
+                                            className="flex-1 py-1.5 px-3 bg-white border border-gray-300 rounded text-xs font-bold hover:bg-gray-50 transition-colors"
+                                        >
+                                            {bundle.is_active ? 'Deactivate' : 'Activate'}
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (confirm(`Delete bundle "${bundle.title}"?`)) {
+                                                    deleteBook && deleteBook(bundle.id);
+                                                }
+                                            }}
+                                            className="py-1.5 px-3 bg-white border border-rose-200 text-rose-500 rounded text-xs font-bold hover:bg-rose-50 transition-colors"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            ))
                         )}
                     </div>
                 </div>
