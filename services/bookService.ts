@@ -102,48 +102,89 @@ export const BookService = {
 
   /**
    * Searches for books by query (title/author)
-   * Returns a list of potential matches
+   * Returns a list of potential matches from Google Books and OpenLibrary
    */
   async searchBooks(query: string): Promise<Partial<Book>[]> {
     try {
       const apiKey = env.gemini.apiKey;
-      const url = new URL('https://www.googleapis.com/books/v1/volumes');
-      url.searchParams.append('q', query);
-      url.searchParams.append('maxResults', '10');
-      if (apiKey) url.searchParams.append('key', apiKey);
 
-      const response = await fetch(url.toString());
-      if (!response.ok) return [];
+      // 1. Google Books Query
+      const googlePromise = (async () => {
+        try {
+          const url = new URL('https://www.googleapis.com/books/v1/volumes');
+          url.searchParams.append('q', query);
+          url.searchParams.append('maxResults', '10');
+          if (apiKey) url.searchParams.append('key', apiKey);
 
-      const data = await response.json();
-      if (!data.items) return [];
+          const res = await fetch(url.toString());
+          if (!res.ok) return [];
+          const data = await res.json();
 
-      return data.items.map((item: any) => {
-        const info = item.volumeInfo;
-        const images = info.imageLinks;
-        let coverUrl = null;
+          return (data.items || []).map((item: any) => {
+            const info = item.volumeInfo;
+            const images = info.imageLinks;
+            let coverUrl = null;
 
-        if (images) {
-          const rawUrl = images.extraLarge || images.large || images.medium || images.thumbnail || images.smallThumbnail;
-          if (rawUrl) {
-            coverUrl = rawUrl.replace('http:', 'https:')
-              .replace('&edge=curl', '')
-              .replace('&zoom=1', '')
-              .replace('&zoom=5', '');
-          }
+            if (images) {
+              const rawUrl = images.extraLarge || images.large || images.medium || images.thumbnail || images.smallThumbnail;
+              if (rawUrl) {
+                coverUrl = rawUrl.replace('http:', 'https:')
+                  .replace('&edge=curl', '')
+                  .replace('&zoom=1', '')
+                  .replace('&zoom=5', '');
+              }
+            }
+            return {
+              title: info.title,
+              author: info.authors ? info.authors.join(', ') : 'Unknown Author',
+              cover_url: coverUrl,
+              publisher: info.publisher,
+              publishedDate: info.publishedDate,
+              description: info.description
+            };
+          });
+        } catch (e) {
+          console.error("Google Books Search Error:", e);
+          return [];
         }
+      })();
 
-        return {
-          title: info.title,
-          author: info.authors ? info.authors.join(', ') : 'Unknown Author',
-          cover_url: coverUrl,
-          publisher: info.publisher,
-          publishedDate: info.publishedDate,
-          description: info.description // Useful for identifying edition
-        };
-      });
+      // 2. OpenLibrary Query
+      const openLibPromise = (async () => {
+        try {
+          const url = new URL('https://openlibrary.org/search.json');
+          url.searchParams.append('q', query);
+          url.searchParams.append('limit', '10');
+
+          const res = await fetch(url.toString());
+          if (!res.ok) return [];
+          const data = await res.json();
+
+          return (data.docs || [])
+            .filter((doc: any) => doc.cover_i) // Only items with covers
+            .map((doc: any) => ({
+              title: doc.title,
+              author: doc.author_name ? doc.author_name.join(', ') : 'Unknown Author',
+              cover_url: `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`,
+              publisher: doc.publisher ? doc.publisher[0] : undefined,
+              publishedDate: doc.first_publish_year ? doc.first_publish_year.toString() : undefined,
+              description: `Edition count: ${doc.edition_count}`
+            }));
+        } catch (e) {
+          console.error("OpenLibrary Search Error:", e);
+          return [];
+        }
+      })();
+
+      // 3. Combine Results
+      const [googleResults, openLibResults] = await Promise.all([googlePromise, openLibPromise]);
+
+      // Simple interleave or content-based merge could happen here, 
+      // but simply concatenating gives the user both options.
+      return [...googleResults, ...openLibResults];
+
     } catch (error) {
-      console.error("Google Books Search Error:", error);
+      console.error("Book Search Error:", error);
       return [];
     }
   },

@@ -331,7 +331,7 @@ const Navbar: React.FC = () => {
         <header
             className="sticky top-0 z-50 shadow-sm relative"
             style={{
-                backgroundImage: "url('/Bookstore 4.png')",
+                backgroundImage: "url('/Book Background.png')",
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat'
@@ -344,7 +344,8 @@ const Navbar: React.FC = () => {
             <nav className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="flex items-center justify-between h-20 gap-6">
                     {/* Logo */}
-                    <Link to="/" className="flex items-center shrink-0">
+                    <Link to="/" className="flex items-center shrink-0 gap-3">
+                        <img src="/Kenya Favicon.PNG" alt="Kenya's Bookstore Logo" className="h-10 w-auto object-contain" />
                         <span className="text-2xl font-serif font-bold">
                             <span className="text-deep-blue">KENYA'S</span>
                             <span className="text-forest"> BOOKSTORE</span>
