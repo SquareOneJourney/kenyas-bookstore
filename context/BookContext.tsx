@@ -39,10 +39,18 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setBooks([]);
       } else {
         // Transform DB shape to App shape (populate list_price_cents)
-        const mappedBooks = (data ?? []).map(b => ({
-          ...b,
-          list_price_cents: b.price ? Math.round(b.price * 100) : null
-        }));
+        const mappedBooks = (data ?? []).map(b => {
+          // Use existing list_price_cents if available, otherwise calculate from price
+          let finalCents = b.list_price_cents;
+          if ((finalCents === null || finalCents === undefined) && b.price) {
+            finalCents = Math.round(b.price * 100);
+          }
+
+          return {
+            ...b,
+            list_price_cents: finalCents
+          };
+        });
         setBooks(mappedBooks);
       }
       setLoading(false);
