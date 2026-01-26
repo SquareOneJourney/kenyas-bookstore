@@ -4,6 +4,7 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import { formatMoneyFromCents } from '../../lib/money';
+import CoverSearchModal from './CoverSearchModal';
 
 interface EditBookModalProps {
     book: Book;
@@ -23,10 +24,44 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) 
     const [condition, setCondition] = useState<BookCondition>((book.condition as BookCondition) || 'New');
     const [source, setSource] = useState<SupplySource>((book.supply_source as SupplySource) || 'local');
     const [location, setLocation] = useState(book.location || '');
+    const [coverUrl, setCoverUrl] = useState(book.cover_url || '');
 
     // AI Analysis State
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [showCoverSearch, setShowCoverSearch] = useState(false);
     const [aiRationale, setAiRationale] = useState('');
+
+    const handleRefreshData = async () => {
+        const isbn = book.isbn || book.isbn13 || book.isbn10;
+        if (!isbn) {
+            alert("No ISBN found for this book.");
+            return;
+        }
+
+        setIsRefreshing(true);
+        try {
+            // dynamic import to avoid circular dependencies if any (though Service is safe)
+            const { BookService } = await import('../../services/bookService');
+            const freshData = await BookService.fetchBookDataByISBN(isbn);
+
+            if (freshData) {
+                if (freshData.title) setTitle(freshData.title);
+                if (freshData.author) setAuthor(freshData.author);
+                if (freshData.cover_url) setCoverUrl(freshData.cover_url);
+
+                // Also update price if we have it and current is empty? Maybe later.
+                alert("Metadata refreshed! Click 'Save' to apply.");
+            } else {
+                alert("Could not find data for this ISBN.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Failed to refresh data.");
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
 
     const handleAnalyze = async () => {
         setIsAnalyzing(true);
@@ -68,7 +103,8 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) 
             stock: parseInt(stock),
             condition,
             supply_source: source,
-            location
+            location,
+            cover_url: coverUrl
         });
         onClose();
     };
@@ -87,8 +123,14 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) 
 
                 <div className="p-8 max-h-[70vh] overflow-y-auto">
                     <div className="flex gap-6 mb-8">
-                        <div className="w-24 shrink-0">
-                            <img src={book.cover_url} alt={title} className="w-full rounded-lg shadow-md aspect-[2/3] object-cover" />
+                        <div className="w-24 shrink-0 relative group">
+                            <img src={coverUrl} alt={title} className="w-full rounded-lg shadow-md aspect-[2/3] object-cover" />
+                            <button
+                                onClick={() => setShowCoverSearch(true)}
+                                className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity rounded-lg"
+                            >
+                                CHANGE
+                            </button>
                         </div>
                         <div className="grow space-y-4">
                             <Input label="Title" value={title} onChange={e => setTitle(e.target.value)} />
@@ -100,20 +142,29 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) 
                         <div className="space-y-2">
                             <div className="flex justify-between items-end">
                                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Price ($)</label>
-                                <button
-                                    onClick={handleAnalyze}
-                                    disabled={isAnalyzing}
-                                    className="text-[10px] font-bold text-forest hover:underline flex items-center gap-1"
-                                >
-                                    {isAnalyzing ? (
-                                        <span className="animate-pulse">ANALYZING...</span>
-                                    ) : (
-                                        <>
-                                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" /></svg>
-                                            ASK AI
-                                        </>
-                                    )}
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleRefreshData}
+                                        disabled={isRefreshing}
+                                        className="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1"
+                                    >
+                                        {isRefreshing ? <span className="animate-spin">↻</span> : '↻ REFRESH DATA'}
+                                    </button>
+                                    <button
+                                        onClick={handleAnalyze}
+                                        disabled={isAnalyzing}
+                                        className="text-[10px] font-bold text-forest hover:underline flex items-center gap-1"
+                                    >
+                                        {isAnalyzing ? (
+                                            <span className="animate-pulse">ANALYZING...</span>
+                                        ) : (
+                                            <>
+                                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" /></svg>
+                                                ASK AI
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                             <input
                                 type="number"
@@ -155,6 +206,16 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave }) 
                     <Button onClick={handleSave} className="shadow-lg shadow-forest/20">Save Changes</Button>
                 </div>
             </div>
+            {showCoverSearch && (
+                <CoverSearchModal
+                    initialQuery={`${title} ${author}`}
+                    onSelect={(url) => {
+                        setCoverUrl(url);
+                        setShowCoverSearch(false);
+                    }}
+                    onClose={() => setShowCoverSearch(false)}
+                />
+            )}
         </div>
     );
 };

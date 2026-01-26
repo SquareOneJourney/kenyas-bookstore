@@ -101,6 +101,54 @@ export const BookService = {
   },
 
   /**
+   * Searches for books by query (title/author)
+   * Returns a list of potential matches
+   */
+  async searchBooks(query: string): Promise<Partial<Book>[]> {
+    try {
+      const apiKey = env.gemini.apiKey;
+      const url = new URL('https://www.googleapis.com/books/v1/volumes');
+      url.searchParams.append('q', query);
+      url.searchParams.append('maxResults', '10');
+      if (apiKey) url.searchParams.append('key', apiKey);
+
+      const response = await fetch(url.toString());
+      if (!response.ok) return [];
+
+      const data = await response.json();
+      if (!data.items) return [];
+
+      return data.items.map((item: any) => {
+        const info = item.volumeInfo;
+        const images = info.imageLinks;
+        let coverUrl = null;
+
+        if (images) {
+          const rawUrl = images.extraLarge || images.large || images.medium || images.thumbnail || images.smallThumbnail;
+          if (rawUrl) {
+            coverUrl = rawUrl.replace('http:', 'https:')
+              .replace('&edge=curl', '')
+              .replace('&zoom=1', '')
+              .replace('&zoom=5', '');
+          }
+        }
+
+        return {
+          title: info.title,
+          author: info.authors ? info.authors.join(', ') : 'Unknown Author',
+          cover_url: coverUrl,
+          publisher: info.publisher,
+          publishedDate: info.publishedDate,
+          description: info.description // Useful for identifying edition
+        };
+      });
+    } catch (error) {
+      console.error("Google Books Search Error:", error);
+      return [];
+    }
+  },
+
+  /**
    * Enriches book data with AI-generated content (description, tags, pricing estimate)
    * 
    * WARNING: AI-generated pricing is an estimate only. Actual pricing should be:
