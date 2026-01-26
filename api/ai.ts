@@ -164,8 +164,14 @@ async function handleGiftFinder(ai: GoogleGenAI, body: any) {
         required: ["recommendations"]
     };
 
-    const config: any = { responseMimeType: 'application/json', responseSchema };
-    if (web_context_ok) config.tools = [{ googleSearch: {} }];
+    const config: any = { responseMimeType: 'application/json' };
+
+    // Controlled generation (responseSchema) is NOT supported with Search tool
+    if (web_context_ok) {
+        config.tools = [{ googleSearch: {} }];
+    } else {
+        config.responseSchema = responseSchema;
+    }
 
     const response = await ai.models.generateContent({
         model: 'gemini-2.0-flash',
