@@ -101,10 +101,13 @@ export const BookService = {
       if (!response.ok) throw new Error('AI Enrichment failed');
       const data = await response.json();
 
+      const priceCents = data.price ? Math.round(data.price * 100) : null;
+
       return {
         ...partialBook,
         description: partialBook.description || data.description || '',
         tags: data.tags || [],
+        list_price_cents: partialBook.list_price_cents || priceCents || 1500,
         price: data.price || 15.00,
       } as any;
     } catch (e) {

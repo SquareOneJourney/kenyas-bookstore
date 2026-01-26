@@ -74,7 +74,32 @@ const AdminLibraryPage: React.FC = () => {
 
     const handleCameraScan = (decodedText: string) => {
         if (isFetching) return;
-        processIsbn(decodedText);
+
+        // Smart ISBN Extraction
+        // 1. Clean the text
+        const cleanText = decodedText.replace(/[^0-9X]/gi, '');
+
+        // 2. Look for explicit ISBN-13 (978/979...)
+        const isbn13Match = cleanText.match(/(978|979)\d{10}/);
+
+        // 3. Look for ISBN-10 (10 digits ending in digit or X)
+        // We only accept ISBN-10 if we don't find an ISBN-13
+        const isbn10Match = cleanText.match(/(?<!\d)\d{9}[\d|X](?!\d)/);
+
+        let finalIsbn = decodedText; // Default to original if no strict match (fallback)
+
+        if (isbn13Match) {
+            finalIsbn = isbn13Match[0];
+        } else if (cleanText.length === 13 && (cleanText.startsWith('978') || cleanText.startsWith('979'))) {
+            finalIsbn = cleanText;
+        } else if (isbn10Match) {
+            finalIsbn = isbn10Match[0];
+        } else if (cleanText.length === 10) {
+            finalIsbn = cleanText;
+        }
+
+        console.log(`Scan Raw: ${decodedText} -> Extracted: ${finalIsbn}`);
+        processIsbn(finalIsbn);
     };
 
     const [scanSessionKey, setScanSessionKey] = useState(0);

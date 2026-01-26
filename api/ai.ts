@@ -72,7 +72,7 @@ async function handleScan(ai: GoogleGenAI, body: any) {
     const { image } = body;
     if (!image) throw new Error('No image data provided');
 
-    const prompt = "Locate the barcode on this book cover. Read the ISBN-13 number (starts with 978 or 979) or the ISBN-10 number. Return ONLY the digits of the number, nothing else. If there are dashes, remove them.";
+    const prompt = "Identify the ISBN-13 (starts with 978 or 979) or ISBN-10 on this book. It is usually on the back cover with a barcode. Return ONLY the digits of the ISBN. If there are other numbers (like prices headers), IGNORE them. Return just the raw 10 or 13 digits.";
 
     const result = await ai.models.generateContent({
         model: 'gemini-2.0-flash',

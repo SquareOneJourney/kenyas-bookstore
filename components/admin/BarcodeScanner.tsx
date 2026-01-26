@@ -115,8 +115,8 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
                 selectedCameraId,
                 {
                     fps: 10,
-                    qrbox: { width: 300, height: 150 },
-                    aspectRatio: 1.333334,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0,
                     videoConstraints: {
                         facingMode: "environment", // Request back camera
                         focusMode: "continuous"
@@ -208,8 +208,8 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
                 if (aiResult) {
                     handleScanSuccess(aiResult);
                 } else {
-                    setError("Could not identify barcode. Ensure good lighting and hold steady.");
-                    startCamera(); // Restart camera for next try
+                    setError("Could not identify barcode. Please try again.");
+                    // Do not auto-restart, let user see error overlay
                 }
 
                 setIsProcessing(false);
@@ -221,7 +221,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
             console.error(err);
             setIsProcessing(false);
             setProcessingMethod(null);
-            startCamera();
+            setError("An error occurred while processing. Please try again.");
         }
     };
 
@@ -264,20 +264,20 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
             </div>
 
             {/* Viewfinder Container */}
-            <div className="relative bg-black min-h-[300px] flex flex-col">
+            <div className="relative bg-black aspect-square w-full max-w-md mx-auto overflow-hidden flex flex-col">
 
                 {/* Visual Guide (Only when active) */}
-                {isCameraReady && !scanResult && !isProcessing && (
+                {isCameraReady && !scanResult && !isProcessing && !error && (
                     <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
-                        <div className="w-[85%] h-[160px] border-2 border-red-500 rounded-lg shadow-[0_0_0_100vh_rgba(0,0,0,0.5)]">
+                        <div className="w-[70%] h-[150px] border-2 border-white/50 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
                             {/* Corner Markers */}
-                            <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-red-500 -mt-1 -ml-1"></div>
-                            <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-red-500 -mt-1 -mr-1"></div>
-                            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-red-500 -mb-1 -ml-1"></div>
-                            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-red-500 -mb-1 -mr-1"></div>
+                            <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-forest -mt-1 -ml-1 rounded-tl-lg"></div>
+                            <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-forest -mt-1 -mr-1 rounded-tr-lg"></div>
+                            <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-forest -mb-1 -ml-1 rounded-bl-lg"></div>
+                            <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-forest -mb-1 -mr-1 rounded-br-lg"></div>
                         </div>
-                        <div className="absolute text-white text-xs font-bold top-[65%] bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm">
-                            Snap Photo of Barcode
+                        <div className="absolute text-white text-xs font-medium top-[75%] bg-black/60 px-4 py-2 rounded-full backdrop-blur-md border border-white/10">
+                            Align Barcode & Tap Button
                         </div>
                     </div>
                 )}
@@ -297,7 +297,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
                 <div id={regionId} className="w-full h-full flex-grow bg-black" />
 
                 {/* Start Button Overlay */}
-                {!isCameraReady && !scanResult && !isProcessing && (
+                {!isCameraReady && !scanResult && !isProcessing && !error && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6 z-10">
                         <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-6">
                             <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -316,26 +316,45 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
 
                 {/* Success Overlay */}
                 {scanResult && (
-                    <div className="absolute inset-0 z-20 bg-white flex flex-col items-center justify-center p-6">
-                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-[bounce_1s_infinite]">
+                    <div className="absolute inset-0 z-20 bg-white/90 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-in fade-in zoom-in duration-300">
+                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-200">
                             <svg className="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
                         <h2 className="text-2xl font-bold text-gray-800 mb-2">Barcode Found!</h2>
-                        <p className="text-3xl font-mono text-forest font-bold mb-8 tracking-wider">{scanResult}</p>
+                        <p className="text-xl font-mono text-forest font-bold mb-8 tracking-wider break-all text-center">{scanResult}</p>
                         <button
                             onClick={() => { setScanResult(null); startCamera(); }}
-                            className="w-full bg-forest text-white font-bold py-4 rounded-xl shadow-lg hover:bg-forest/90 transition-all transform active:scale-98"
+                            className="w-full bg-forest text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95"
                         >
-                            Scan Another Book
+                            Scan Another
+                        </button>
+                    </div>
+                )}
+
+                {/* Error Overlay */}
+                {error && (
+                    <div className="absolute inset-0 z-20 bg-white/90 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-in fade-in zoom-in duration-300">
+                        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-red-200">
+                            <svg className="w-10 h-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Scan Failed</h2>
+                        <p className="text-center text-gray-600 mb-8">{error}</p>
+                        <button
+                            onClick={() => { setError(''); startCamera(); }}
+                            className="w-full bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95"
+                        >
+                            Try Again
                         </button>
                     </div>
                 )}
             </div>
 
             {/* Manual SNAP Button */}
-            {isCameraReady && !scanResult && !isProcessing && (
+            {isCameraReady && !scanResult && !isProcessing && !error && (
                 <div className="p-6 bg-gray-900 border-t border-gray-800 flex justify-center">
                     <button
                         onClick={captureAndScan}
@@ -348,12 +367,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess }) => {
                 </div>
             )}
 
-            {/* Error Message */}
-            {error && (
-                <div className="p-3 bg-red-50 border-t border-red-100 text-red-700 text-center text-sm font-medium animate-pulse">
-                    ⚠️ {error}
-                </div>
-            )}
+
         </div>
     );
 };
