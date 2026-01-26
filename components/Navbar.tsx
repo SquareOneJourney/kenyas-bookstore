@@ -342,11 +342,11 @@ const Navbar: React.FC = () => {
 
             {/* Main Header - Logo, Search, Account/Wishlist/Cart */}
             <nav className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <div className="flex items-center justify-between h-20 gap-6">
+                <div className="flex items-center justify-between h-20 gap-2 md:gap-6">
                     {/* Logo */}
-                    <Link to="/" className="flex items-center shrink-0 gap-3">
-                        <img src="/Kenya Favicon.PNG" alt="Kenya's Bookstore Logo" className="h-10 w-auto object-contain" />
-                        <span className="text-2xl font-serif font-bold">
+                    <Link to="/" className="flex items-center shrink-0 gap-2 md:gap-3">
+                        <img src="/Kenya Favicon.PNG" alt="Kenya's Bookstore Logo" className="h-8 md:h-10 w-auto object-contain" />
+                        <span className="text-lg md:text-2xl font-serif font-bold truncate">
                             <span className="text-deep-blue">KENYA'S</span>
                             <span className="text-forest"> BOOKSTORE</span>
                         </span>
@@ -358,7 +358,7 @@ const Navbar: React.FC = () => {
                     </div>
 
                     {/* Account, Wishlist, Cart - Right */}
-                    <div className="flex items-center gap-4 shrink-0">
+                    <div className="flex items-center gap-2 md:gap-4 shrink-0">
                         {/* Account Menu */}
                         <div className="relative hidden md:block" ref={accountMenuRef}>
                             <button

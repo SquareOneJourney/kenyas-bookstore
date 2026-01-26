@@ -6,7 +6,6 @@ import { useBooks } from '../hooks/useBooks';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import HeroBanner from '../components/HeroBanner';
 import BookCarousel from '../components/BookCarousel';
-import TrustBadges from '../components/TrustBadges';
 import NewsletterSignup from '../components/NewsletterSignup';
 import Button from '../components/ui/Button';
 import { formatMoneyFromCents } from '../lib/money';
@@ -71,33 +70,32 @@ const HomePage: React.FC = () => {
         backgroundImage: "url('/Bookstore 4.png')"
       }}
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <HeroBanner />
-        <TrustBadges />
 
         {/* Featured Book Section */}
         {featured.length > 0 && (
-          <section className="mb-12 md:mb-16">
-            <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-xl overflow-hidden">
+          <section className="mb-12 md:mb-16 mt-8">
+            <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden">
               <div className="md:flex">
-                <div className="md:w-1/3">
+                <div className="md:w-1/3 h-64 md:h-auto relative">
                   <img
                     src={featured[0].cover_url || '/placeholder-book.png'}
                     alt={featured[0].title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover absolute inset-0"
                   />
                 </div>
-                <div className="md:w-2/3 p-8 md:p-12 flex flex-col justify-center">
-                  <div className="text-sm font-semibold text-forest uppercase tracking-wider mb-2">
+                <div className="md:w-2/3 p-6 md:p-12 flex flex-col justify-center">
+                  <div className="text-xs md:text-sm font-semibold text-forest uppercase tracking-wider mb-2">
                     Featured This Week
                   </div>
-                  <h2 className="font-serif text-3xl md:text-4xl font-bold text-deep-blue mb-4">
+                  <h2 className="font-serif text-2xl md:text-4xl font-bold text-deep-blue mb-3 md:mb-4">
                     {featured[0].title}
                   </h2>
-                  <p className="text-lg text-gray-700 mb-4">by {featured[0].author}</p>
-                  <p className="text-gray-600 mb-6 line-clamp-3">{featured[0].description}</p>
+                  <p className="text-base md:text-lg text-gray-700 mb-3 md:mb-4">by {featured[0].author}</p>
+                  <p className="text-sm md:text-base text-gray-600 mb-6 line-clamp-3">{featured[0].description}</p>
                   <div className="flex items-center gap-4">
-                    <span className="text-3xl font-bold text-forest">
+                    <span className="text-2xl md:text-3xl font-bold text-forest">
                       {formatMoneyFromCents(featured[0].list_price_cents ?? 0, featured[0].currency || 'USD')}
                     </span>
                     <Link to={`/book/${featured[0].id}`}>
@@ -110,22 +108,22 @@ const HomePage: React.FC = () => {
           </section>
         )}
 
-        <div className="bg-white/80 backdrop-blur-md rounded-3xl p-6 mb-12 shadow-lg">
+        <div className="mb-12">
           <BookCarousel title="New Releases" books={newReleases} />
         </div>
 
-        <div className="bg-white/80 backdrop-blur-md rounded-3xl p-6 mb-12 shadow-lg">
+        <div className="mb-12">
           <BookCarousel title="Kenya's Picks" books={picks} />
         </div>
 
-        <div className="bg-white/80 backdrop-blur-md rounded-3xl p-6 mb-12 shadow-lg">
+        <div className="mb-12">
           <BookCarousel title="Bestsellers" books={bestsellers} />
         </div>
 
 
         {/* Recently Viewed */}
         {recentlyViewed.length > 0 && (
-          <div className="bg-white/80 backdrop-blur-md rounded-3xl p-6 mb-12 shadow-lg">
+          <div className="mb-12">
             <BookCarousel
               title="Recently Viewed"
               books={recentlyViewed.slice(0, 4)}
