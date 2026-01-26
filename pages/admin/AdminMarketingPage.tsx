@@ -48,8 +48,8 @@ const AdminMarketingPage: React.FC = () => {
             const discountPriceCents = Math.round(totalPriceCents * 0.85); // 15% discount for bundles
 
             setGeneratedBundle({
-                name: data.name,
-                description: data.description,
+                name: data.name || "New Book Bundle",
+                description: data.description || "A curated collection of books.",
                 price_cents: discountPriceCents
             });
 

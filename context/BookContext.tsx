@@ -48,12 +48,19 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const addBooks = async (newBooks: Book[]) => {
     console.log("BOOK_CONTEXT_VERSION: 1.2_STRICT_SCHEMA");
-    setBooks(prev => [...newBooks, ...prev]);
+
+    // Validate inputs
+    const validBooks = newBooks.filter(b => b.title && b.title.trim() !== '');
+    if (validBooks.length !== newBooks.length) {
+      console.warn("Filtered out books with missing titles:", newBooks.length - validBooks.length);
+    }
+
+    setBooks(prev => [...validBooks, ...prev]);
 
     const supabase = getSupabaseClient();
     if (!supabase) return;
 
-    const dbBooks = newBooks.map((book) => ({
+    const dbBooks = validBooks.map((book) => ({
       id: book.id,
       title: book.title,
       author: book.author ?? null,
@@ -88,11 +95,16 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const updateBook = async (id: string, updates: Partial<Book>) => {
+    console.log("updateBook called for:", id, "updates:", updates);
+
     // 1. Optimistic Update
     setBooks(prev => prev.map(book => book.id === id ? { ...book, ...updates } : book));
 
     const supabase = getSupabaseClient();
-    if (!supabase) return;
+    if (!supabase) {
+      console.warn("No Supabase client available for update");
+      return;
+    }
 
     // 2. Map to DB Schema (similar to insert but partial)
     const dbUpdates: any = {};
@@ -112,7 +124,11 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (updates.price !== undefined) {
       dbUpdates.price = updates.price;
     } else if (updates.list_price_cents !== undefined) {
-      dbUpdates.price = updates.list_price_cents / 100;
+      if (!isNaN(updates.list_price_cents)) {
+        dbUpdates.price = updates.list_price_cents / 100;
+      } else {
+        console.warn("Skipping price update: list_price_cents is NaN");
+      }
     }
 
     // Handle ISBN mapping
@@ -120,7 +136,7 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       dbUpdates.isbn = updates.isbn13 || updates.isbn10 || updates.isbn;
     }
 
-    console.log("Updating book:", id, dbUpdates);
+    console.log("Sending Database Update:", id, dbUpdates);
 
     const { error } = await supabase
       .from('books')
@@ -128,9 +144,11 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       .eq('id', id);
 
     if (error) {
-      console.error("Error updating book:", error);
+      console.error("Error updating book in DB:", error);
       alert("Failed to save changes: " + error.message);
-      // Rollback? (TODO)
+      // Optional: Rollback state here if critical
+    } else {
+      console.log("DB Update Successful");
     }
   };
 
