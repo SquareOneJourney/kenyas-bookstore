@@ -121,13 +121,42 @@ async function handleChat(ai: GoogleGenAI, body: any) {
 async function handleGiftFinder(ai: GoogleGenAI, body: any) {
     const { catalog, user_preferences, web_context_ok } = body;
 
-    const prompt = `Role: You are Kenya, the mindful owner of a small online bookstore...
-    [Full gift finder prompt - kept identical to original]
-    Inputs:
-    - catalog: ${JSON.stringify(catalog)}
-    - user_preferences: ${JSON.stringify(user_preferences)}
-    - web_context_ok: ${web_context_ok}
-    Output in JSON with recommendations array.`;
+    const prompt = `Role: You are Kenya, the mindful, warm, and highly literate owner of a small, independent online bookstore called "Kenya's Bookstore."
+    
+    Task: Use your deep knowledge of literature and the provided store catalog to recommend the perfect gift for a customer based on their preferences.
+    
+    Input Context:
+    1. **Store Catalog** (Available Inventory):
+    ${JSON.stringify(catalog)}
+    
+    2. **Customer Preferences**:
+    ${JSON.stringify(user_preferences)}
+    
+    3. **Web Context Allowed**: ${web_context_ok}
+    
+    Guidelines:
+    - **Tone**: Warm, personal, encouraging, and sophisticated but accessible. Use phrases like "I think you'd love...", "This is a hidden gem...", "For a cozy afternoon...".
+    - **Priority**: ALWAYS prioritize books from the **Store Catalog** if they match the vibe.
+    - **Out of Stock/External**: If the catalog has nothing suitable, and Web Context is Allowed, you may recommend a perfect book from the wider world. Mark it as "isOutOfStock": true.
+    - **Selection**: Choose 3-5 distinct recommendations.
+    
+    Output Format:
+    Return a strictly valid JSON object with the following structure. Do NOT use markdown code blocks.
+    {
+      "recommendations": [
+        {
+          "title": "Exact Title",
+          "author": "Author Name",
+          "kenyaNote": "A warm, 2-sentence personal note explaining why this specific book fits their mood/need.",
+          "isOutOfStock": boolean,  // true if not in the catalog provided
+          "inStockAlternative": { "title": "...", "author": "..." } // Optional: if the main rec is out of stock, suggest a similar in-stock book
+        }
+      ],
+      "optionalPairings": [
+        { "theme": "Cozy Night In", "items": ["Tea", "Weighted Blanket"] }
+      ],
+      "refineFiltersMessage": "Optional question if the request was too vague."
+    }`;
 
     const responseSchema = {
         type: Type.OBJECT,
@@ -164,12 +193,14 @@ async function handleGiftFinder(ai: GoogleGenAI, body: any) {
         required: ["recommendations"]
     };
 
-    const config: any = { responseMimeType: 'application/json' };
+    const config: any = {};
 
-    // Controlled generation (responseSchema) is NOT supported with Search tool
+    // Controlled generation (responseSchema/MimeType) is NOT supported with Search tool in Gemini 2.0 Flash
     if (web_context_ok) {
         config.tools = [{ googleSearch: {} }];
+        // We rely on the prompt to enforce JSON structure when search is enabled
     } else {
+        config.responseMimeType = 'application/json';
         config.responseSchema = responseSchema;
     }
 
@@ -180,7 +211,14 @@ async function handleGiftFinder(ai: GoogleGenAI, body: any) {
     });
 
     const text = response.text?.replace(/```json|```/g, '').trim() || '{}';
-    const parsed = JSON.parse(text);
+    let parsed: any = {};
+
+    try {
+        parsed = JSON.parse(text);
+    } catch (e) {
+        console.error("Failed to parse JSON from AI Gift Finder:", text);
+        return { recommendations: [], refineFiltersMessage: "I'm having a little trouble finding the right book. Could you tell me more about what you're looking for?" };
+    }
 
     // Extract citations if available
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
