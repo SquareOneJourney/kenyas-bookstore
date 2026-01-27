@@ -13,7 +13,7 @@ import { BOOKS as MOCK_BOOKS } from '../../lib/mockData';
 
 const AdminLibraryPage: React.FC = () => {
     // 1. Add updateBook to hook destructuring
-    const { getBooks, addBooks, updateBook } = useBooks();
+    const { getBooks, addBooks, updateBook, deleteBook } = useBooks();
     const [books, setBooks] = useState<Book[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<'library' | 'scan' | 'insights'>('library');
@@ -149,6 +149,22 @@ const AdminLibraryPage: React.FC = () => {
         }
     };
 
+    const handleDeleteBook = async (id: string) => {
+        if (deleteBook) {
+            await deleteBook(id);
+            setBooks(prev => prev.filter(b => b.id !== id));
+            // Modal closes itself via its own onDelete wrapper which calls onClose, 
+            // but just in case we are orchestrating it here, we ensure state is clean.
+            // Actually EditBookModal calls onClose after onDelete returns (if we passed a promise maybe? no it's void).
+            // Looking at EditBookModal:
+            // handleDelete calls onDelete(book.id) then onClose().
+            // So we don't need to manually close it here, but it doesn't hurt to ensure.
+            setEditingBook(null);
+        } else {
+            console.error("deleteBook not available in hook");
+        }
+    };
+
     const filteredBooks = books.filter(b =>
         b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         b.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -207,6 +223,7 @@ const AdminLibraryPage: React.FC = () => {
                     book={editingBook}
                     onClose={() => setEditingBook(null)}
                     onSave={handleUpdateBook}
+                    onDelete={handleDeleteBook}
                 />
             )}
 

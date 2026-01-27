@@ -43,18 +43,44 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const addBooks = async (newBooks: Book[]) => {
-    // Basic implementation for context
+    // Update local state immediately
     setBooks(prev => [...newBooks, ...prev]);
-    const supabase = getSupabaseClient();
-    if (!supabase) return;
 
-    // Simplified DB insert for stability (full logic in previous version, this restores key functionality)
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      console.warn('Supabase not configured, book only saved locally');
+      return;
+    }
+
+    // Map all relevant fields to what the database expects
     const dbBooks = newBooks.map(b => ({
-      id: b.id, title: b.title, author: b.author,
+      id: b.id,
+      title: b.title,
+      author: b.author,
+      genre: b.genre || null,
+      description: b.description || null,
+      isbn13: b.isbn13 || null,
+      isbn10: b.isbn10 || null,
+      cover_url: b.cover_url || null,
       list_price_cents: b.list_price_cents,
-      price: b.list_price_cents ? b.list_price_cents / 100 : 0
+      price: b.list_price_cents ? b.list_price_cents / 100 : 0,
+      stock: b.stock ?? 1,
+      condition: b.condition || 'New',
+      location: b.location || null,
+      supply_source: b.supply_source || 'local',
+      cost_basis: b.cost_basis || 0,
+      is_active: b.is_active ?? true,
+      tags: b.tags || [],
+      created_at: b.created_at || new Date().toISOString(),
     }));
-    await supabase.from('books').insert(dbBooks);
+
+    const { error } = await supabase.from('books').insert(dbBooks);
+    if (error) {
+      console.error('Failed to save book(s) to Supabase:', error);
+      // Optionally revert local state here, but for now we log
+    } else {
+      console.log('Book(s) saved to Supabase successfully');
+    }
   };
 
   const updateBook = async (id: string, updates: Partial<Book>) => {
