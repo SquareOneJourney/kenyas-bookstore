@@ -52,24 +52,23 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return;
     }
 
-    // Map all relevant fields to what the database expects
+    // Map to actual database columns (from database_setup.sql)
+    // DB has: id, title, author, genre, price, stock, isbn, description, 
+    //         cover_url, condition, location, tags, supply_source, cost_basis, created_at
     const dbBooks = newBooks.map(b => ({
       id: b.id,
       title: b.title,
       author: b.author,
       genre: b.genre || null,
       description: b.description || null,
-      isbn13: b.isbn13 || null,
-      isbn10: b.isbn10 || null,
+      isbn: b.isbn13 || b.isbn10 || b.isbn || null, // DB uses single 'isbn' column
       cover_url: b.cover_url || null,
-      list_price_cents: b.list_price_cents,
-      price: b.list_price_cents ? b.list_price_cents / 100 : 0,
+      price: b.list_price_cents ? b.list_price_cents / 100 : 0, // DB uses 'price' not 'list_price_cents'
       stock: b.stock ?? 1,
       condition: b.condition || 'New',
       location: b.location || null,
       supply_source: b.supply_source || 'local',
       cost_basis: b.cost_basis || 0,
-      is_active: b.is_active ?? true,
       tags: b.tags || [],
       created_at: b.created_at || new Date().toISOString(),
     }));
@@ -77,7 +76,6 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const { error } = await supabase.from('books').insert(dbBooks);
     if (error) {
       console.error('Failed to save book(s) to Supabase:', error);
-      // Optionally revert local state here, but for now we log
     } else {
       console.log('Book(s) saved to Supabase successfully');
     }
