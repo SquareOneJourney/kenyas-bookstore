@@ -13,8 +13,8 @@ const Button: React.FC<ButtonProps> = ({
   size = 'md',
   ...props
 }) => {
-  const baseClasses = 'font-semibold rounded-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-ecru';
-  
+  const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-ecru';
+
   const variantClasses = {
     primary: 'bg-oxblood text-ecru hover:bg-oxblood/90 focus:ring-oxblood shadow-elevate',
     secondary: 'bg-brass text-midnight hover:bg-brass/90 focus:ring-brass shadow-md',
