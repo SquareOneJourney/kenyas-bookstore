@@ -42,13 +42,26 @@ async function handleAnalyze(ai: GoogleGenAI, body: any) {
     if (type === 'identify') {
         prompt = `Identify this book: "${payload.query}". Return ONLY a JSON object: {"title": "string", "author": "string"}. ${baseInstruction}`;
     } else if (type === 'analyze') {
-        prompt = `Analyze this book for "Kenya's Bookstore":
-        Title: "${payload.title}"
-        Author: "${payload.author}"
-        Format: ${payload.format || 'paperback'}
-        Return ONLY a JSON object:
-        {"suggested_price": number, "rationale": string, "target_audience": string, "marketing_angles": ["string", "string"]}
-        ${baseInstruction}`;
+        prompt = `You are a pricing assistant for "Kenya's Bookstore", a small independent bookstore selling standard retail book copies (NOT rare, collectible, or first editions).
+
+Context:
+- Title: "${payload.title}"
+- Author: "${payload.author}"
+- Format: ${payload.format || 'paperback'}
+- Condition: ${payload.condition || 'New or Like New'}
+
+IMPORTANT PRICING GUIDELINES:
+- This is a REGULAR retail bookstore, not a rare book dealer
+- Most mass market paperbacks: $8-$15
+- Trade paperbacks: $12-$20
+- New hardcovers: $20-$35
+- Used books: 30-50% off retail
+- The suggested price should NEVER exceed $50 unless it's a large art book or textbook
+- Classic novels like Jurassic Park, fiction bestsellers, etc. should be $10-$20
+
+Return ONLY a JSON object:
+{"suggested_price": number, "rationale": string, "target_audience": string, "marketing_angles": ["string", "string"]}
+${baseInstruction}`;
     } else if (type === 'enrich') {
         prompt = `I have a book: "${payload.title}" by "${payload.author}".
         Return ONLY a JSON object with: 
