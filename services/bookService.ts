@@ -79,8 +79,16 @@ export const BookService = {
           }
         }
 
+        // Clean up the title - remove common subtitle patterns like ": [novel]" or "(novel)"
+        let cleanTitle = info.title;
+        cleanTitle = cleanTitle
+          .replace(/\s*:\s*\[.*?\]\s*$/i, '')  // Remove : [anything] at end
+          .replace(/\s*\(novel\)\s*$/i, '')     // Remove (novel) at end
+          .replace(/\s*:\s*a novel\s*$/i, '')   // Remove : a novel at end
+          .trim();
+
         return {
-          title: info.title,
+          title: cleanTitle,
           author: info.authors ? info.authors.join(', ') : 'Unknown Author',
           description: info.description || '',
           page_count: info.pageCount,

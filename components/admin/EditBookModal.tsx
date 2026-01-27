@@ -122,7 +122,7 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave, on
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
             {/* ... wrapper div ... */}
-            <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-white w-full max-w-2xl max-h-[85vh] md:max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col mb-24 md:mb-0">
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                     <h2 className="text-2xl font-serif font-bold text-deep-blue">Edit Inventory</h2>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -132,9 +132,9 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave, on
                     </button>
                 </div>
 
-                <div className="p-8 max-h-[70vh] overflow-y-auto">
+                <div className="p-4 md:p-8 flex-1 overflow-y-auto">
                     {/* ... form content ... */}
-                    <div className="flex gap-6 mb-8">
+                    <div className="flex flex-col md:flex-row gap-4 md:gap-6 mb-6 md:mb-8">
                         <div className="w-24 shrink-0 relative group">
                             <img src={coverUrl} alt={title} className="w-full rounded-lg shadow-md aspect-[2/3] object-cover" />
                             <button
@@ -147,8 +147,8 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave, on
                         <div className="grow space-y-4">
                             <Input label="Title" value={title} onChange={e => setTitle(e.target.value)} />
                             <Input label="Author" value={author} onChange={e => setAuthor(e.target.value)} />
-                            <div className="flex gap-4">
-                                <div className="w-1/2">
+                            <div className="flex flex-col gap-4">
+                                <div className="w-full">
                                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Status</label>
                                     <select
                                         value={isActive ? 'active' : 'archived'}
@@ -163,7 +163,7 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave, on
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
                         <div className="space-y-2">
                             <div className="flex justify-between items-end">
                                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Price ($)</label>
@@ -207,7 +207,7 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave, on
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                         <Select label="Condition" value={condition} onChange={e => setCondition(e.target.value as BookCondition)}>
                             <option value="New">New</option>
                             <option value="Used - Like New">Like New</option>
@@ -226,7 +226,7 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onSave, on
                     )}
                 </div>
 
-                <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-between gap-3">
+                <div className="p-4 md:p-6 border-t border-gray-100 bg-gray-50/50 flex flex-col-reverse md:flex-row justify-between gap-3">
                     <button
                         onClick={handleDelete}
                         className="px-6 py-3 rounded-full font-bold text-rose-500 hover:bg-rose-50 transition-colors"
