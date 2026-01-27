@@ -86,11 +86,35 @@ export const BookProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const supabase = getSupabaseClient();
     if (!supabase) return;
 
-    // Map updates to DB keys
-    const dbUpdates: any = { ...updates };
-    if (updates.list_price_cents) dbUpdates.price = updates.list_price_cents / 100;
+    // Map updates to DB keys explicitly
+    const dbUpdates: any = {};
 
-    await supabase.from('books').update(dbUpdates).eq('id', id);
+    // Explicitly map allowed columns
+    if (updates.title !== undefined) dbUpdates.title = updates.title;
+    if (updates.author !== undefined) dbUpdates.author = updates.author;
+    if (updates.genre !== undefined) dbUpdates.genre = updates.genre;
+    if (updates.description !== undefined) dbUpdates.description = updates.description;
+    if (updates.cover_url !== undefined) dbUpdates.cover_url = updates.cover_url;
+    if (updates.stock !== undefined) dbUpdates.stock = updates.stock;
+    if (updates.condition !== undefined) dbUpdates.condition = updates.condition;
+    if (updates.location !== undefined) dbUpdates.location = updates.location;
+    if (updates.supply_source !== undefined) dbUpdates.supply_source = updates.supply_source;
+    if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
+
+    // Special mapping for price
+    if (updates.list_price_cents !== undefined) {
+      dbUpdates.price = updates.list_price_cents / 100;
+    } else if (updates.price !== undefined) {
+      dbUpdates.price = updates.price;
+    }
+
+    // Explicitly exclude fields that don't exist in DB like 'is_active', 'isbn13', etc. to prevent failure
+
+    const { error } = await supabase.from('books').update(dbUpdates).eq('id', id);
+
+    if (error) {
+      console.error("Failed to update book in Supabase:", error);
+    }
   };
 
   const deleteBook = async (id: string) => {
